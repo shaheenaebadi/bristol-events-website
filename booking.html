@@ -1,0 +1,272 @@
+<!-- =============================================
+     BRISTOL EVENTS - BOOKING PAGE
+     Student ID: [Your Student ID]
+     Complete Booking System with Discount Calculation
+     ============================================= -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book {{ event.event_name }} - Bristol Events</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🎪</span>
+                <h1>Bristol Events</h1>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('events') }}">Browse Events</a></li>
+                <li><a href="{{ url_for('about') }}">About Us</a></li>
+                <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                <li><a href="{{ url_for('my_bookings') }}">My Bookings</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Booking Section -->
+    <section class="booking-section">
+        <div class="container">
+            <div class="booking-container">
+                <!-- Header -->
+                <div class="booking-header">
+                    <h1>🎟️ Book Your Tickets</h1>
+                    <p>You're booking for: <strong>{{ event.event_name }}</strong></p>
+                </div>
+
+                <!-- Booking Steps -->
+                <div class="booking-steps">
+                    <div class="step active">
+                        <div class="step-number">1</div>
+                        <div>Select Tickets</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div>Review</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div>Confirm</div>
+                    </div>
+                </div>
+
+                <!-- Event Summary Card -->
+                <div class="booking-form" style="background: linear-gradient(135deg, var(--light-pink), var(--lavender)); margin-bottom: 2rem;">
+                    <h3 style="color: var(--primary-purple); margin-bottom: 1rem;">📋 Event Details</h3>
+                    <div class="summary-item">
+                        <span><strong>Event:</strong></span>
+                        <span>{{ event.event_name }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span><strong>Date:</strong></span>
+                        <span>{{ event.start_date.strftime('%d %B %Y') }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span><strong>Venue:</strong></span>
+                        <span>{{ event.venue_name }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span><strong>Price per Ticket:</strong></span>
+                        <span>£{{ "%.2f"|format(event.ticket_price) }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span><strong>Available Tickets:</strong></span>
+                        <span>{{ tickets_remaining }}</span>
+                    </div>
+                </div>
+
+                <!-- Booking Form -->
+                <form method="POST" action="{{ url_for('book_event', event_id=event.event_id) }}" id="bookingForm">
+                    <div class="booking-form">
+                        <h3 style="color: var(--primary-purple); margin-bottom: 1.5rem;">🎫 Select Number of Tickets</h3>
+                        
+                        <div class="form-group">
+                            <label for="num_tickets">Number of Tickets *</label>
+                            <select name="num_tickets" id="num_tickets" required onchange="updateSummary()">
+                                {% for i in range(1, min(tickets_remaining + 1, 11)) %}
+                                    <option value="{{ i }}">{{ i }} ticket{% if i > 1 %}s{% endif %}</option>
+                                {% endfor %}
+                            </select>
+                            <small style="color: var(--text-gray);">Maximum 10 tickets per booking</small>
+                        </div>
+
+                        <!-- Discount Information -->
+                        <div style="background: var(--light-pink); padding: 1.5rem; border-radius: 12px; margin: 1.5rem 0;">
+                            <h4 style="color: var(--primary-purple); margin-bottom: 1rem;">💝 Your Discounts</h4>
+                            
+                            {% if is_student %}
+                                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.8rem;">
+                                    <span style="font-size: 1.5rem;">🎓</span>
+                                    <div>
+                                        <strong>Student Discount: 10%</strong>
+                                        <p style="font-size: 0.9rem; color: var(--text-gray); margin: 0;">You'll save even more!</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if preview_discount > (10 if is_student else 0) %}
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <span style="font-size: 1.5rem;">⏰</span>
+                                    <div>
+                                        <strong>Early Bird Discount: {{ preview_discount - (10 if is_student else 0) }}%</strong>
+                                        <p style="font-size: 0.9rem; color: var(--text-gray); margin: 0;">Booking in advance saves you money!</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if preview_discount == 0 %}
+                                <div style="text-align: center; color: var(--text-gray);">
+                                    <p>💡 Tip: Book earlier for discounts up to 20%!</p>
+                                </div>
+                            {% else %}
+                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px dashed var(--primary-pink);">
+                                    <strong style="color: var(--primary-purple); font-size: 1.1rem;">
+                                        Total Discount: {{ preview_discount }}%
+                                    </strong>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Important Information -->
+                        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; margin: 1.5rem 0; border-radius: 8px;">
+                            <h4 style="margin-bottom: 0.5rem;">ℹ️ Important Information</h4>
+                            <ul style="margin: 0.5rem 0 0 1.5rem; line-height: 1.8;">
+                                {% if is_student %}
+                                    <li>Please bring your student ID to the event</li>
+                                {% endif %}
+                                <li>Tickets are non-refundable within 25 days of the event</li>
+                                <li>Cancellation before 40 days: No fee</li>
+                                <li>Cancellation 25-39 days: 40% fee</li>
+                                <li>Cancellation within 25 days: 100% fee</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Booking Summary -->
+                    <div class="booking-summary">
+                        <h3 style="color: var(--primary-purple); margin-bottom: 1rem;">💰 Booking Summary</h3>
+                        <div class="summary-item">
+                            <span>Ticket Price:</span>
+                            <span id="ticketPrice">£{{ "%.2f"|format(event.ticket_price) }}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Number of Tickets:</span>
+                            <span id="numTickets">1</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">£{{ "%.2f"|format(event.ticket_price) }}</span>
+                        </div>
+                        {% if preview_discount > 0 %}
+                        <div class="summary-item" style="color: #00b894;">
+                            <span>Discount ({{ preview_discount }}%):</span>
+                            <span id="discount">-£{{ "%.2f"|format(event.ticket_price * preview_discount / 100) }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="summary-item" style="font-size: 1.3rem; padding-top: 1rem; border-top: 2px solid var(--primary-pink);">
+                            <span><strong>Total Amount:</strong></span>
+                            <span id="total"><strong>£{{ "%.2f"|format(event.ticket_price * (100 - preview_discount) / 100) }}</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1; min-width: 200px;">
+                            🎉 Confirm Booking
+                        </button>
+                        <a href="{{ url_for('event_detail', event_id=event.event_id) }}" 
+                           class="btn btn-secondary" 
+                           style="flex: 1; min-width: 200px; text-align: center; padding: 1.2rem;">
+                            ← Back to Event
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>✨ Bristol Events</h3>
+                    <p>Your gateway to discovering the best events in Bristol</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <a href="{{ url_for('index') }}">Home</a>
+                    <a href="{{ url_for('events') }}">Events</a>
+                    <a href="{{ url_for('about') }}">About Us</a>
+                    <a href="{{ url_for('contact') }}">Contact</a>
+                </div>
+                <div class="footer-section">
+                    <h3>Legal</h3>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Cookie Policy</a>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <p>📧 info@bristolevents.com</p>
+                    <p>📞 +44 117 123 4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Bristol Community Events. Made with 💕 in Bristol</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript for Dynamic Summary Update -->
+    <script>
+        const ticketPrice = {{ event.ticket_price }};
+        const discount = {{ preview_discount }};
+        
+        function updateSummary() {
+            const numTickets = parseInt(document.getElementById('num_tickets').value);
+            const subtotal = ticketPrice * numTickets;
+            const discountAmount = subtotal * (discount / 100);
+            const total = subtotal - discountAmount;
+            
+            document.getElementById('numTickets').textContent = numTickets;
+            document.getElementById('subtotal').textContent = '£' + subtotal.toFixed(2);
+            
+            if (discount > 0) {
+                document.getElementById('discount').textContent = '-£' + discountAmount.toFixed(2);
+            }
+            
+            document.getElementById('total').innerHTML = '<strong>£' + total.toFixed(2) + '</strong>';
+        }
+        
+        // Mobile menu
+        document.getElementById('hamburger').addEventListener('click', function() {
+            document.getElementById('navMenu').classList.toggle('active');
+        });
+        
+        // Form validation
+        document.getElementById('bookingForm').addEventListener('submit', function(e) {
+            const numTickets = parseInt(document.getElementById('num_tickets').value);
+            const maxTickets = {{ tickets_remaining }};
+            
+            if (numTickets > maxTickets) {
+                e.preventDefault();
+                alert('Only ' + maxTickets + ' tickets available!');
+            }
+        });
+    </script>
+</body>
+</html>

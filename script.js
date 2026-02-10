@@ -1,7 +1,7 @@
 /* =============================================
    BRISTOL EVENTS - JAVASCRIPT
-   Author: Student ID
-   Date: January 2026
+   Student ID: [Your Student ID]
+   Interactive Features & Animations
    ============================================= */
 
 // Mobile Navigation Toggle
@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const hamburger = document.getElementById('hamburger');
     const navMenu = document.getElementById('navMenu');
 
-    if (hamburger) {
+    if (hamburger && navMenu) {
         hamburger.addEventListener('click', function() {
             navMenu.classList.toggle('active');
             hamburger.classList.toggle('active');
@@ -22,57 +22,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 hamburger.classList.remove('active');
             }
         });
-    }
-});
 
-// Login/Register Form Toggle
-function showLogin() {
-    document.getElementById('loginForm').style.display = 'block';
-    document.getElementById('registerForm').style.display = 'none';
-}
-
-function showRegister() {
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('registerForm').style.display = 'block';
-}
-
-// Form Validation
-document.addEventListener('DOMContentLoaded', function() {
-    // Contact Form Validation
-    const contactForm = document.querySelector('.contact-form');
-    if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('Thank you for your message! We will get back to you soon.');
-            contactForm.reset();
-        });
-    }
-
-    // Login Form Validation
-    const loginForm = document.querySelector('#loginForm form');
-    if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('Login functionality will be implemented in the backend!');
-        });
-    }
-
-    // Register Form Validation
-    const registerForm = document.querySelector('#registerForm form');
-    if (registerForm) {
-        registerForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const password = document.getElementById('register-password').value;
-            const confirm = document.getElementById('register-confirm').value;
-            
-            if (password !== confirm) {
-                alert('Passwords do not match!');
-                return;
-            }
-            
-            alert('Registration successful! Please login to continue.');
-            showLogin();
-            registerForm.reset();
+        // Close menu when clicking a link
+        navMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', function() {
+                navMenu.classList.remove('active');
+                hamburger.classList.remove('active');
+            });
         });
     }
 });
@@ -91,9 +47,9 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
-// Add animation on scroll
+// Scroll-triggered Animations
 function revealOnScroll() {
-    const elements = document.querySelectorAll('.event-card, .category-card, .feature-item');
+    const elements = document.querySelectorAll('.event-card, .category-card');
     const windowHeight = window.innerHeight;
     
     elements.forEach(element => {
@@ -101,21 +57,163 @@ function revealOnScroll() {
         const elementVisible = 150;
         
         if (elementTop < windowHeight - elementVisible) {
-            element.style.opacity = '1';
-            element.style.transform = 'translateY(0)';
+            element.classList.add('fade-in');
         }
     });
 }
 
+// Run on load and scroll
+window.addEventListener('load', revealOnScroll);
 window.addEventListener('scroll', revealOnScroll);
 
-// Initialize animations
+// Auto-hide Flash Messages after 5 seconds
 document.addEventListener('DOMContentLoaded', function() {
-    const elements = document.querySelectorAll('.event-card, .category-card, .feature-item');
-    elements.forEach(element => {
-        element.style.opacity = '0';
-        element.style.transform = 'translateY(20px)';
-        element.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    const flashMessages = document.querySelectorAll('.alert');
+    
+    flashMessages.forEach(message => {
+        setTimeout(() => {
+            message.style.opacity = '0';
+            message.style.transform = 'translateX(400px)';
+            setTimeout(() => {
+                message.remove();
+            }, 300);
+        }, 5000);
+        
+        // Click to dismiss
+        message.addEventListener('click', function() {
+            this.style.opacity = '0';
+            this.style.transform = 'translateX(400px)';
+            setTimeout(() => {
+                this.remove();
+            }, 300);
+        });
     });
-    revealOnScroll();
 });
+
+// Image Loading Error Handler
+document.addEventListener('DOMContentLoaded', function() {
+    const images = document.querySelectorAll('.event-image');
+    
+    images.forEach(img => {
+        img.addEventListener('error', function() {
+            // If image fails to load, show gradient background
+            this.style.display = 'none';
+            this.parentElement.style.background = 'linear-gradient(135deg, #ff6b9d 0%, #c44569 100%)';
+        });
+    });
+});
+
+// Form Validation Enhancement
+function validateBookingForm(form) {
+    const numTickets = parseInt(form.querySelector('#num_tickets').value);
+    
+    if (numTickets < 1) {
+        alert('Please select at least 1 ticket! 🎟️');
+        return false;
+    }
+    
+    if (numTickets > 10) {
+        alert('Maximum 10 tickets per booking! 💝');
+        return false;
+    }
+    
+    return true;
+}
+
+// Add to Event Card Click Handler
+document.addEventListener('DOMContentLoaded', function() {
+    const eventCards = document.querySelectorAll('.event-card');
+    
+    eventCards.forEach(card => {
+        // Prevent click when clicking on buttons inside card
+        const buttons = card.querySelectorAll('a, button');
+        buttons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        });
+    });
+});
+
+// Loading Indicator for Forms
+function showLoading(button) {
+    button.disabled = true;
+    button.innerHTML = '⏳ Processing...';
+}
+
+// Apply to all forms
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('form');
+    
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const submitButton = this.querySelector('button[type="submit"]');
+            if (submitButton) {
+                showLoading(submitButton);
+            }
+        });
+    });
+});
+
+// Prevent Double Booking
+let bookingInProgress = false;
+
+function preventDoubleBooking(form) {
+    if (bookingInProgress) {
+        alert('Booking already in progress! Please wait... ✨');
+        return false;
+    }
+    
+    bookingInProgress = true;
+    
+    setTimeout(() => {
+        bookingInProgress = false;
+    }, 3000);
+    
+    return true;
+}
+
+// Add sparkle effect on hover (optional fun feature!)
+document.addEventListener('DOMContentLoaded', function() {
+    const buttons = document.querySelectorAll('.btn-primary, .btn-book');
+    
+    buttons.forEach(button => {
+        button.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-3px) scale(1.05)';
+        });
+        
+        button.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+});
+
+// Countdown to Event (optional feature)
+function updateCountdown(eventDateString, elementId) {
+    const eventDate = new Date(eventDateString).getTime();
+    
+    const updateTimer = () => {
+        const now = new Date().getTime();
+        const distance = eventDate - now;
+        
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.innerHTML = `${days}d ${hours}h ${minutes}m`;
+        }
+        
+        if (distance < 0) {
+            if (element) element.innerHTML = 'Event Started!';
+            return;
+        }
+    };
+    
+    updateTimer();
+    setInterval(updateTimer, 60000); // Update every minute
+}
+
+// Initialize on page load
+console.log('🎉 Bristol Events Website Loaded! Have fun booking! 💕');
