@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings - Bristol Events</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🎪</span>
+                <h1>Bristol Events</h1>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('events') }}">Browse Events</a></li>
+                <li><a href="{{ url_for('my_bookings') }}" class="active">My Bookings</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+        </div>
+    </nav>
+
+    <section class="events-showcase" style="padding-top: 2rem;">
+        <div class="container">
+            <h1 class="section-title">🎟️ My Bookings</h1>
+            <div style="max-width: 900px; margin: 0 auto;">
+                {% if bookings %}
+                    {% for booking in bookings %}
+                    <div style="background: white; padding: 2rem; border-radius: 20px; box-shadow: var(--shadow-md); margin-bottom: 2rem;">
+                        <h3 style="color: var(--primary-purple); margin-bottom: 1rem;">{{ booking.event_name }}</h3>
+                        <p>📅 Date: {{ booking.start_date.strftime('%d %B %Y') }}</p>
+                        <p>📍 Venue: {{ booking.venue_name }}</p>
+                        <p>🎫 Tickets: {{ booking.num_tickets }}</p>
+                        <p>💰 Total: £{{ "%.2f"|format(booking.final_amount) }}</p>
+                        <p>✅ Status: {{ booking.booking_status }}</p>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; padding: 3rem;">
+                        <p style="font-size: 1.2rem; color: var(--text-gray);">
+                            You haven't made any bookings yet!
+                        </p>
+                        <a href="{{ url_for('events') }}" class="btn btn-primary" style="margin-top: 1rem;">
+                            Browse Events
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2026 Bristol Community Events</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

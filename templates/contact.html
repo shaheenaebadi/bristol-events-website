@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Bristol Events</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🎪</span>
+                <h1>Bristol Events</h1>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('events') }}">Browse Events</a></li>
+                <li><a href="{{ url_for('about') }}">About Us</a></li>
+                <li><a href="{{ url_for('contact') }}" class="active">Contact</a></li>
+                {% if session.user_id %}
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}">Login</a></li>
+                {% endif %}
+            </ul>
+            <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+        </div>
+    </nav>
+
+    <section class="events-showcase" style="padding-top: 2rem;">
+        <div class="container">
+            <h1 class="section-title">Get in Touch</h1>
+            <div style="max-width: 600px; margin: 0 auto;">
+                <div style="background: white; padding: 2rem; border-radius: 20px; box-shadow: var(--shadow-md);">
+                    <p style="text-align: center; margin-bottom: 2rem;">
+                        📧 Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1c75727a735c7e6e756f687370796a7972686f327f7371">[email&#160;protected]</a><br>
+                        📞 Phone: +44 117 123 4567<br>
+                        📍 Bristol, United Kingdom
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2026 Bristol Community Events</p>
+            </div

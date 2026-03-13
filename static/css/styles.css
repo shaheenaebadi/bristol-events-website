@@ -1,0 +1,953 @@
+/* =============================================
+   BRISTOL EVENTS - GIRLY AESTHETIC DESIGN
+   Student ID: [Your Student ID]
+   Responsive CSS with Pink/Purple Theme
+   ============================================= */
+
+/* =============================================
+   CSS VARIABLES - Easy Color Customization
+   ============================================= */
+:root {
+    /* Girly Color Palette */
+    --primary-pink: #ff6b9d;
+    --primary-purple: #c44569;
+    --light-pink: #ffeef4;
+    --soft-pink: #ffd6e7;
+    --accent-purple: #a55eea;
+    --lavender: #e5d4ff;
+    --peach: #ffa07a;
+    --cream: #fff8f0;
+    
+    /* Neutral Colors */
+    --white: #ffffff;
+    --light-gray: #f8f9fa;
+    --text-dark: #2d3436;
+    --text-gray: #636e72;
+    
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(255, 107, 157, 0.1);
+    --shadow-md: 0 4px 16px rgba(255, 107, 157, 0.15);
+    --shadow-lg: 0 8px 32px rgba(255, 107, 157, 0.2);
+    
+    /* Spacing */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 2rem;
+    --spacing-lg: 3rem;
+    --spacing-xl: 4rem;
+}
+
+/* =============================================
+   RESET & BASE STYLES
+   ============================================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+    line-height: 1.7;
+    color: var(--text-dark);
+    background: linear-gradient(135deg, var(--light-pink) 0%, var(--lavender) 100%);
+    background-attachment: fixed;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 12px;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+}
+
+/* =============================================
+   UTILITY CLASSES
+   ============================================= */
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-sm);
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+    color: var(--primary-purple);
+    position: relative;
+    padding-bottom: 1rem;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-pink), var(--accent-purple));
+    border-radius: 2px;
+}
+
+/* =============================================
+   BUTTONS - Girly Style
+   ============================================= */
+.btn {
+    display: inline-block;
+    padding: 0.9rem 2rem;
+    border: none;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-pink) 0%, var(--primary-purple) 100%);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-secondary {
+    background: var(--white);
+    color: var(--primary-pink);
+    border: 2px solid var(--primary-pink);
+}
+
+.btn-secondary:hover {
+    background: var(--primary-pink);
+    color: var(--white);
+    transform: translateY(-3px);
+}
+
+.btn-book {
+    background: linear-gradient(135deg, var(--accent-purple) 0%, var(--primary-pink) 100%);
+    color: var(--white);
+    padding: 1.2rem 3rem;
+    font-size: 1.1rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* =============================================
+   HORIZONTAL NAVIGATION BAR
+   ============================================= */
+.navbar {
+    background: var(--white);
+    box-shadow: var(--shadow-md);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 3px solid var(--soft-pink);
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 90%;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.logo-icon {
+    font-size: 2rem;
+}
+
+.logo h1 {
+    font-size: 1.6rem;
+    background: linear-gradient(135deg, var(--primary-pink) 0%, var(--accent-purple) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+}
+
+.nav-menu {
+    display: flex;
+    gap: 2.5rem;
+    align-items: center;
+}
+
+.nav-menu a {
+    font-weight: 600;
+    color: var(--text-dark);
+    padding: 0.5rem 1rem;
+    position: relative;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+}
+
+.nav-menu a::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-pink), var(--accent-purple));
+    transition: width 0.3s ease;
+    border-radius: 2px;
+}
+
+.nav-menu a:hover::before,
+.nav-menu a.active::before {
+    width: 80%;
+}
+
+.nav-menu a:hover,
+.nav-menu a.active {
+    color: var(--primary-pink);
+    background: var(--light-pink);
+}
+
+.hamburger {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    gap: 5px;
+}
+
+.hamburger span {
+    width: 28px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-pink), var(--accent-purple));
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+/* =============================================
+   HERO SECTION
+   ============================================= */
+.hero {
+    background: linear-gradient(135deg, var(--primary-pink) 0%, var(--accent-purple) 100%);
+    color: var(--white);
+    padding: 5rem 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+    background-size: cover;
+    opacity: 0.3;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+}
+
+.hero h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    font-weight: 800;
+    text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.hero p {
+    font-size: 1.3rem;
+    margin-bottom: 2rem;
+    opacity: 0.95;
+}
+
+/* =============================================
+   EVENT CARDS WITH IMAGES
+   ============================================= */
+.events-showcase {
+    padding: var(--spacing-xl) 0;
+    background: var(--white);
+}
+
+.events-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-top: var(--spacing-md);
+}
+
+.event-card {
+    background: var(--white);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    transition: all 0.4s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.event-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: var(--shadow-lg);
+}
+
+.event-image-container {
+    position: relative;
+    height: 250px;
+    overflow: hidden;
+}
+
+.event-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.event-card:hover .event-image {
+    transform: scale(1.1);
+}
+
+.event-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.7) 100%);
+    display: flex;
+    align-items: flex-end;
+    padding: 1.5rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.event-card:hover .event-overlay {
+    opacity: 1;
+}
+
+.event-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: var(--primary-pink);
+    color: var(--white);
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+}
+
+.event-content {
+    padding: 1.5rem;
+}
+
+.event-category {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--soft-pink), var(--lavender));
+    color: var(--primary-purple);
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.8rem;
+}
+
+.event-date {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-gray);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.event-content h3 {
+    font-size: 1.4rem;
+    margin: 0.8rem 0;
+    color: var(--primary-purple);
+    font-weight: 700;
+}
+
+.event-description {
+    color: var(--text-gray);
+    margin: 0.8rem 0;
+    line-height: 1.6;
+}
+
+.event-location {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-gray);
+    margin: 0.8rem 0;
+}
+
+.event-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 1rem 0;
+    padding: 1rem;
+    background: var(--light-pink);
+    border-radius: 12px;
+}
+
+.event-price {
+    font-size: 1.8rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary-pink), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.event-price-label {
+    font-size: 0.8rem;
+    color: var(--text-gray);
+    display: block;
+}
+
+/* =============================================
+   CATEGORY CARDS
+   ============================================= */
+.categories {
+    padding: var(--spacing-xl) 0;
+    background: linear-gradient(135deg, var(--cream) 0%, var(--light-pink) 100%);
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+}
+
+.category-card {
+    background: var(--white);
+    padding: 2.5rem;
+    border-radius: 20px;
+    text-align: center;
+    transition: all 0.4s ease;
+    border: 3px solid transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.category-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--soft-pink), var(--lavender));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.category-card:hover {
+    transform: translateY(-8px) rotate(-2deg);
+    border-color: var(--primary-pink);
+    box-shadow: var(--shadow-lg);
+}
+
+.category-card:hover::before {
+    opacity: 0.3;
+}
+
+.category-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.category-card h3 {
+    font-size: 1.4rem;
+    margin-bottom: 0.8rem;
+    color: var(--primary-purple);
+    position: relative;
+    z-index: 1;
+}
+
+.category-card p {
+    color: var(--text-gray);
+    position: relative;
+    z-index: 1;
+}
+
+/* =============================================
+   BOOKING PAGE STYLES
+   ============================================= */
+.booking-section {
+    padding: var(--spacing-xl) 0;
+    background: var(--white);
+}
+
+.booking-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, var(--light-pink) 0%, var(--lavender) 100%);
+    padding: var(--spacing-lg);
+    border-radius: 25px;
+    box-shadow: var(--shadow-lg);
+}
+
+.booking-header {
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.booking-header h1 {
+    color: var(--primary-purple);
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.booking-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-sm);
+    background: var(--white);
+    border-radius: 15px;
+}
+
+.step {
+    flex: 1;
+    text-align: center;
+    padding: 1rem;
+    position: relative;
+}
+
+.step.active {
+    background: linear-gradient(135deg, var(--soft-pink), var(--lavender));
+    border-radius: 10px;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-pink);
+    color: var(--white);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.booking-form {
+    background: var(--white);
+    padding: var(--spacing-md);
+    border-radius: 20px;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--primary-purple);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid var(--soft-pink);
+    border-radius: 12px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-pink);
+    box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.1);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.booking-summary {
+    background: linear-gradient(135deg, var(--soft-pink), var(--lavender));
+    padding: var(--spacing-md);
+    border-radius: 15px;
+    margin-top: var(--spacing-md);
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid rgba(255, 107, 157, 0.2);
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--primary-purple);
+}
+
+/* =============================================
+   FORMS & AUTH PAGES
+   ============================================= */
+.auth-section {
+    padding: var(--spacing-xl) 0;
+    min-height: calc(100vh - 200px);
+    display: flex;
+    align-items: center;
+}
+
+.auth-container {
+    max-width: 500px;
+    margin: 0 auto;
+    background: var(--white);
+    padding: var(--spacing-lg);
+    border-radius: 25px;
+    box-shadow: var(--shadow-lg);
+}
+
+.auth-form h2 {
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+    color: var(--primary-purple);
+}
+
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+}
+
+.form-options a {
+    color: var(--primary-pink);
+}
+
+.auth-switch {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: var(--text-gray);
+}
+
+.auth-switch a {
+    color: var(--primary-pink);
+    font-weight: 600;
+}
+
+/* =============================================
+   FLASH MESSAGES
+   ============================================= */
+.flash-messages {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 400px;
+}
+
+.alert {
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow-md);
+    animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #00b894, #55efc4);
+    color: var(--white);
+}
+
+.alert-error {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+    color: var(--white);
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #74b9ff, #a29bfe);
+    color: var(--white);
+}
+
+/* =============================================
+   FOOTER
+   ============================================= */
+.footer {
+    background: linear-gradient(135deg, var(--primary-purple) 0%, var(--primary-pink) 100%);
+    color: var(--white);
+    padding: 3rem 0 1.5rem;
+    margin-top: var(--spacing-xl);
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.footer-section h3 {
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.footer-section p,
+.footer-section a {
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.footer-section a:hover {
+    color: var(--white);
+    text-decoration: underline;
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* =============================================
+   RESPONSIVE - TABLET (768px - 1023px)
+   ============================================= */
+@media (min-width: 768px) {
+    /* Typography scales up */
+    html {
+        font-size: 17px;
+    }
+    
+    .section-title {
+        font-size: 2.5rem;
+    }
+    
+    .hero h1 {
+        font-size: 3.5rem;
+    }
+    
+    /* Grid layouts become 2 columns */
+    .events-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .category-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .form-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .footer-content {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* Event images scale */
+    .event-image-container {
+        height: 280px;
+    }
+}
+
+/* =============================================
+   RESPONSIVE - DESKTOP (1024px+)
+   ============================================= */
+@media (min-width: 1024px) {
+    /* Typography scales further */
+    html {
+        font-size: 18px;
+    }
+    
+    .section-title {
+        font-size: 3rem;
+    }
+    
+    .hero h1 {
+        font-size: 4rem;
+    }
+    
+    /* Grid layouts become 3-4 columns */
+    .events-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .category-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .footer-content {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    /* Event images larger */
+    .event-image-container {
+        height: 300px;
+    }
+}
+
+/* =============================================
+   RESPONSIVE - MOBILE (max-width: 767px)
+   ============================================= */
+@media (max-width: 767px) {
+    /* Smaller text on mobile */
+    html {
+        font-size: 14px;
+    }
+    
+    .section-title {
+        font-size: 1.8rem;
+    }
+    
+    .hero h1 {
+        font-size: 2rem;
+    }
+    
+    .hero p {
+        font-size: 1rem;
+    }
+    
+    /* Mobile menu */
+    .hamburger {
+        display: flex;
+    }
+    
+    .nav-menu {
+        position: fixed;
+        top: 70px;
+        left: 0;
+        right: 0;
+        background: var(--white);
+        flex-direction: column;
+        gap: 0;
+        padding: 1rem 0;
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-150%);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.4s ease;
+        border-radius: 0 0 20px 20px;
+    }
+    
+    .nav-menu.active {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .nav-menu li {
+        padding: 1rem 2rem;
+        border-bottom: 1px solid var(--light-pink);
+    }
+    
+    .nav-menu li:last-child {
+        border-bottom: none;
+    }
+    
+    /* Smaller images on mobile */
+    .event-image-container {
+        height: 200px;
+    }
+    
+    /* Booking steps stack */
+    .booking-steps {
+        flex-direction: column;
+    }
+}
+
+/* =============================================
+   ANIMATIONS
+   ============================================= */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.6s ease;
+}
+
+/* =============================================
+   PRINT STYLES
+   ============================================= */
+@media print {
+    .navbar,
+    .footer,
+    .btn,
+    .hamburger {
+        display: none;
+    }
+    
+    body {
+        background: var(--white);
+    }
+    
+    .event-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+}

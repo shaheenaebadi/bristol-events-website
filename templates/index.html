@@ -1,0 +1,286 @@
+<!-- =============================================
+     BRISTOL EVENTS - HOMEPAGE TEMPLATE
+     Student ID: [Your Student ID]
+     Girly Aesthetic Design with Flask Integration
+     ============================================= -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bristol Community Events - Discover Amazing Events</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🎪</span>
+                <h1>Bristol Events</h1>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="{{ url_for('index') }}" class="active">Home</a></li>
+                <li><a href="{{ url_for('events') }}">Browse Events</a></li>
+                <li><a href="{{ url_for('about') }}">About Us</a></li>
+                <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                {% if session.user_id %}
+                    <li><a href="{{ url_for('my_bookings') }}">My Bookings</a></li>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}">Login/Register</a></li>
+                {% endif %}
+            </ul>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>✨ Discover Bristol's Best Events ✨</h1>
+            <p>Exhibitions, Workshops, Sports, Music, and So Much More!</p>
+            <a href="{{ url_for('events') }}" class="btn btn-primary">Explore All Events</a>
+        </div>
+    </section>
+
+    <!-- Featured Events with Clickable Images -->
+    <section class="events-showcase">
+        <div class="container">
+            <h2 class="section-title">🎉 Upcoming Events You'll Love</h2>
+            <div class="events-grid">
+                {% for event in events %}
+                <div class="event-card" onclick="window.location.href='{{ url_for('event_detail', event_id=event.event_id) }}'">
+                    <!-- Event Image (Clickable) -->
+                    <div class="event-image-container">
+                        {% if event.category_name == 'Exhibition' %}
+                            <img src="{{ url_for('static', filename='images/exhibition.jpg') }}" 
+                                 alt="{{ event.event_name }}" 
+                                 class="event-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';">
+                        {% elif event.category_name == 'Musical' %}
+                            <img src="{{ url_for('static', filename='images/music.jpg') }}" 
+                                 alt="{{ event.event_name }}" 
+                                 class="event-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #30cfd0 0%, #330867 100%)';">
+                        {% elif event.category_name == 'Sports' %}
+                            <img src="{{ url_for('static', filename='images/sports.jpg') }}" 
+                                 alt="{{ event.event_name }}" 
+                                 class="event-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';">
+                        {% elif event.category_name == 'Theatre' %}
+                            <img src="{{ url_for('static', filename='images/theatre.jpg') }}" 
+                                 alt="{{ event.event_name }}" 
+                                 class="event-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #fa709a 0%, #fee140 100%)';">
+                        {% elif event.category_name == 'Workshop' %}
+                            <img src="{{ url_for('static', filename='images/workshop.jpg') }}" 
+                                 alt="{{ event.event_name }}" 
+                                 class="event-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)';">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/community.jpg') }}" 
+                                 alt="{{ event.event_name }}" 
+                                 class="event-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)';">
+                        {% endif %}
+                        
+                        <!-- Hover Overlay with Book Button -->
+                        <div class="event-overlay">
+                            <div>
+                                <h3 style="color: white; margin-bottom: 1rem;">{{ event.event_name }}</h3>
+                                {% if session.user_id %}
+                                    <a href="{{ url_for('book_event', event_id=event.event_id) }}" 
+                                       class="btn btn-primary"
+                                       onclick="event.stopPropagation();">
+                                        🎟️ Book Now
+                                    </a>
+                                {% else %}
+                                    <a href="{{ url_for('login', next=url_for('book_event', event_id=event.event_id)) }}" 
+                                       class="btn btn-primary"
+                                       onclick="event.stopPropagation();">
+                                        🎟️ Login to Book
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Badge -->
+                        {% if event.ticket_price == 0 %}
+                            <span class="event-badge">FREE</span>
+                        {% elif event.tickets_remaining < 10 %}
+                            <span class="event-badge" style="background: #ff6b6b;">Almost Full!</span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Event Content -->
+                    <div class="event-content">
+                        <span class="event-category">{{ event.category_name }}</span>
+                        <div class="event-date">
+                            📅 {{ event.start_date.strftime('%d %B %Y') }}
+                            {% if event.is_multi_day %}
+                                - {{ event.end_date.strftime('%d %B %Y') }}
+                            {% endif %}
+                        </div>
+                        <h3>{{ event.event_name }}</h3>
+                        <p class="event-description">{{ event.event_description[:100] }}...</p>
+                        <p class="event-location">📍 {{ event.venue_name }}</p>
+                        
+                        <div class="event-details">
+                            <div>
+                                <span class="event-price-label">Price</span>
+                                <div class="event-price">
+                                    {% if event.ticket_price == 0 %}
+                                        FREE
+                                    {% else %}
+                                        £{{ "%.2f"|format(event.ticket_price) }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div>
+                                <span class="event-price-label">Available</span>
+                                <div style="font-size: 1.2rem; font-weight: 700; color: var(--accent-purple);">
+                                    {{ event.tickets_remaining }} tickets
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <a href="{{ url_for('event_detail', event_id=event.event_id) }}" 
+                           class="btn btn-secondary" 
+                           style="width: 100%; margin-top: 1rem;">
+                            View Details →
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <p style="text-align: center; color: var(--text-gray); grid-column: 1/-1;">
+                    No upcoming events at the moment. Check back soon! 💕
+                </p>
+                {% endfor %}
+            </div>
+            
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="{{ url_for('events') }}" class="btn btn-primary">
+                    See All Events →
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="categories">
+        <div class="container">
+            <h2 class="section-title">✨ Event Categories</h2>
+            <div class="category-grid">
+                <div class="category-card">
+                    <div class="category-icon">🎨</div>
+                    <h3>Exhibitions</h3>
+                    <p>Explore art, culture, and creative displays</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-icon">🎵</div>
+                    <h3>Musical Events</h3>
+                    <p>Live performances and concerts</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-icon">⚽</div>
+                    <h3>Sports Events</h3>
+                    <p>Football, rugby, and more</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-icon">🎭</div>
+                    <h3>Theatre</h3>
+                    <p>Drama, comedy, and performances</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-icon">🛠️</div>
+                    <h3>Workshops</h3>
+                    <p>Learn new skills and crafts</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-icon">🎉</div>
+                    <h3>Community Events</h3>
+                    <p>Festivals and celebrations</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Choose Us -->
+    <section class="events-showcase">
+        <div class="container">
+            <h2 class="section-title">💖 Why Book With Us?</h2>
+            <div class="category-grid">
+                <div class="category-card">
+                    <div class="category-icon">🎟️</div>
+                    <h3>Easy Booking</h3>
+                    <p>Simple and secure ticket booking in just a few clicks</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-icon">💰</div>
+                    <h3>Early Bird Discounts</h3>
+                    <p>Save up to 20% on advance bookings</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-icon">🎓</div>
+                    <h3>Student Discount</h3>
+                    <p>10% off for students on all events</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-icon">🔔</div>
+                    <h3>Instant Confirmation</h3>
+                    <p>Get your tickets immediately after booking</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>✨ Bristol Events</h3>
+                    <p>Your gateway to discovering the best events in Bristol</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <a href="{{ url_for('index') }}">Home</a>
+                    <a href="{{ url_for('events') }}">Events</a>
+                    <a href="{{ url_for('about') }}">About Us</a>
+                    <a href="{{ url_for('contact') }}">Contact</a>
+                </div>
+                <div class="footer-section">
+                    <h3>Legal</h3>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Cookie Policy</a>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <p>📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a1c8cfc7cee1c3d3c8d2d5cecdc4d7c4cfd5d28fc2cecc">[email&#160;protected]</a></p>
+                    <p>📞 +44 117 123 4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Bristol Community Events. Made with 💕 in Bristol</p>
+            </div
