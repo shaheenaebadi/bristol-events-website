@@ -39,7 +39,48 @@
     <section class="events-showcase" style="padding-top: 2rem;">
         <div class="container">
             <h2 class="section-title">🎉 All Events</h2>
-            
+
+            <!-- Filter Form -->
+            <form method="GET" action="{{ url_for('events') }}"
+                  style="background: white; padding: 1.5rem; border-radius: 16px;
+                         box-shadow: var(--shadow-md); margin-bottom: 2rem;
+                         display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+                <div style="flex: 1; min-width: 160px;">
+                    <label style="display:block; font-size:0.9rem; font-weight:600;
+                                  color:var(--primary-purple); margin-bottom:0.4rem;">
+                        Category
+                    </label>
+                    <select name="category"
+                            style="width:100%; padding:0.6rem 1rem; border:2px solid var(--light-pink);
+                                   border-radius:8px; font-family:inherit; font-size:0.95rem;">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.category_id }}"
+                                {% if selected_category == cat.category_id|string %}selected{% endif %}>
+                                {{ cat.category_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem; padding-bottom:0.2rem;">
+                    <input type="checkbox" name="free_only" id="free_only" value="1"
+                           {% if free_only %}checked{% endif %}
+                           style="width:18px; height:18px; accent-color:var(--primary-purple);">
+                    <label for="free_only" style="font-weight:600; color:var(--primary-purple);">
+                        Free events only
+                    </label>
+                </div>
+                <div style="display:flex; gap:0.5rem;">
+                    <button type="submit" class="btn btn-primary" style="padding:0.7rem 1.5rem;">
+                        Filter
+                    </button>
+                    <a href="{{ url_for('events') }}" class="btn btn-secondary"
+                       style="padding:0.7rem 1.5rem; text-align:center;">
+                        Clear
+                    </a>
+                </div>
+            </form>
+
             <div class="events-grid">
                 {% for event in events %}
                 <div class="event-card">

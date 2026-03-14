@@ -35,7 +35,29 @@
                         <p>📍 Venue: {{ booking.venue_name }}</p>
                         <p>🎫 Tickets: {{ booking.num_tickets }}</p>
                         <p>💰 Total: £{{ "%.2f"|format(booking.final_amount) }}</p>
-                        <p>✅ Status: {{ booking.booking_status }}</p>
+                        <p>
+                            {% if booking.booking_status == 'confirmed' %}
+                                ✅ Status: <strong style="color:#00b894;">Confirmed</strong>
+                            {% elif booking.booking_status == 'cancelled' %}
+                                ❌ Status: <strong style="color:#d63031;">Cancelled</strong>
+                                {% if booking.cancellation_fee > 0 %}
+                                    &nbsp;— Fee: £{{ "%.2f"|format(booking.cancellation_fee) }}
+                                {% endif %}
+                            {% else %}
+                                ⏳ Status: {{ booking.booking_status }}
+                            {% endif %}
+                        </p>
+                        {% if booking.booking_status == 'confirmed' %}
+                        <form method="POST"
+                              action="{{ url_for('cancel_booking', booking_id=booking.booking_id) }}"
+                              onsubmit="return confirm('Are you sure you want to cancel this booking? Cancellation fees may apply.');">
+                            <button type="submit" class="btn btn-secondary"
+                                    style="margin-top:0.5rem; background:#ff6b6b; color:white;
+                                           border-color:#ff6b6b;">
+                                Cancel Booking
+                            </button>
+                        </form>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 {% else %}
