@@ -461,6 +461,281 @@ def cancel_booking(booking_id):
 
 
 # ──────────────────────────────────────────
+# Routes — Admin Panel
+# ──────────────────────────────────────────
+
+def admin_required():
+    """Abort with 403 if current user is not admin."""
+    from flask import abort
+    if session.get('user_type') != 'admin':
+        abort(403)
+
+
+@app.route('/admin')
+def admin_dashboard():
+    admin_required()
+    cur = mysql.connection.cursor()
+
+    cur.execute("SELECT COUNT(*) AS cnt FROM EVENT WHERE start_date >= CURDATE()")
+    total_events = cur.fetchone()['cnt']
+
+    cur.execute("SELECT COUNT(*) AS cnt FROM BOOKING WHERE booking_status='confirmed'")
+    total_bookings = cur.fetchone()['cnt']
+
+    cur.execute("SELECT COALESCE(SUM(final_amount),0) AS rev FROM BOOKING WHERE booking_status='confirmed'")
+    total_revenue = cur.fetchone()['rev']
+
+    cur.execute("SELECT COUNT(*) AS cnt FROM USER WHERE user_type='standard'")
+    total_users = cur.fetchone()['cnt']
+
+    cur.close()
+    return render_template('admin/dashboard.html',
+                           total_events=total_events,
+                           total_bookings=total_bookings,
+                           total_revenue=total_revenue,
+                           total_users=total_users)
+
+
+@app.route('/admin/events')
+def admin_events():
+    admin_required()
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT e.*, v.venue_name, ec.category_name,
+               (v.capacity - COALESCE(
+                   SUM(CASE WHEN b.booking_status='confirmed'
+                            THEN b.number_of_tickets ELSE 0 END), 0)
+               ) AS tickets_remaining
+        FROM EVENT e
+        JOIN VENUE v ON e.venue_id = v.venue_id
+        JOIN EVENT_CATEGORY ec ON e.category_id = ec.category_id
+        LEFT JOIN BOOKING b ON e.event_id = b.event_id
+        GROUP BY e.event_id
+        ORDER BY e.start_date DESC
+    """)
+    events = cur.fetchall()
+    cur.close()
+    return render_template('admin/events.html', events=events, today=date.today())
+
+
+@app.route('/admin/events/add', methods=['GET', 'POST'])
+def admin_add_event():
+    admin_required()
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM VENUE ORDER BY venue_name")
+    venues = cur.fetchall()
+    cur.execute("SELECT * FROM EVENT_CATEGORY ORDER BY category_name")
+    categories = cur.fetchall()
+    cur.close()
+
+    if request.method == 'POST':
+        name        = request.form.get('event_name', '').strip()
+        description = request.form.get('event_description', '').strip()
+        start_date  = request.form.get('start_date')
+        end_date    = request.form.get('end_date') or None
+        price       = float(request.form.get('ticket_price', 0))
+        is_multi    = 'is_multi_day' in request.form
+        days_count  = int(request.form.get('days_count', 1)) if is_multi else 1
+        price_pd    = float(request.form.get('price_per_day', 0)) if is_multi else 0
+        last_date   = request.form.get('last_booking_date') or None
+        conditions  = request.form.get('conditions', '').strip() or None
+        venue_id    = int(request.form.get('venue_id'))
+        category_id = int(request.form.get('category_id'))
+
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            INSERT INTO EVENT (event_name, event_description, start_date, end_date,
+                               ticket_price, is_multi_day, days_count, price_per_day,
+                               last_booking_date, conditions, venue_id, category_id)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        """, (name, description, start_date, end_date, price, is_multi,
+              days_count, price_pd, last_date, conditions, venue_id, category_id))
+        mysql.connection.commit()
+        cur.close()
+        flash(f'Event "{name}" added successfully!', 'success')
+        return redirect(url_for('admin_events'))
+
+    return render_template('admin/event_form.html',
+                           venues=venues, categories=categories,
+                           event=None, action='Add')
+
+
+@app.route('/admin/events/edit/<int:event_id>', methods=['GET', 'POST'])
+def admin_edit_event(event_id):
+    admin_required()
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM VENUE ORDER BY venue_name")
+    venues = cur.fetchall()
+    cur.execute("SELECT * FROM EVENT_CATEGORY ORDER BY category_name")
+    categories = cur.fetchall()
+    cur.execute("SELECT * FROM EVENT WHERE event_id=%s", (event_id,))
+    event = cur.fetchone()
+    cur.close()
+
+    if not event:
+        flash('Event not found.', 'error')
+        return redirect(url_for('admin_events'))
+
+    if request.method == 'POST':
+        name        = request.form.get('event_name', '').strip()
+        description = request.form.get('event_description', '').strip()
+        start_date  = request.form.get('start_date')
+        end_date    = request.form.get('end_date') or None
+        price       = float(request.form.get('ticket_price', 0))
+        is_multi    = 'is_multi_day' in request.form
+        days_count  = int(request.form.get('days_count', 1)) if is_multi else 1
+        price_pd    = float(request.form.get('price_per_day', 0)) if is_multi else 0
+        last_date   = request.form.get('last_booking_date') or None
+        conditions  = request.form.get('conditions', '').strip() or None
+        venue_id    = int(request.form.get('venue_id'))
+        category_id = int(request.form.get('category_id'))
+
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            UPDATE EVENT SET event_name=%s, event_description=%s, start_date=%s,
+                end_date=%s, ticket_price=%s, is_multi_day=%s, days_count=%s,
+                price_per_day=%s, last_booking_date=%s, conditions=%s,
+                venue_id=%s, category_id=%s
+            WHERE event_id=%s
+        """, (name, description, start_date, end_date, price, is_multi,
+              days_count, price_pd, last_date, conditions, venue_id, category_id, event_id))
+        mysql.connection.commit()
+        cur.close()
+        flash(f'Event "{name}" updated successfully!', 'success')
+        return redirect(url_for('admin_events'))
+
+    return render_template('admin/event_form.html',
+                           venues=venues, categories=categories,
+                           event=event, action='Edit')
+
+
+@app.route('/admin/events/delete/<int:event_id>', methods=['POST'])
+def admin_delete_event(event_id):
+    admin_required()
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT event_name FROM EVENT WHERE event_id=%s", (event_id,))
+    event = cur.fetchone()
+    if event:
+        cur.execute("DELETE FROM EVENT WHERE event_id=%s", (event_id,))
+        mysql.connection.commit()
+        flash(f'Event "{event["event_name"]}" deleted.', 'success')
+    else:
+        flash('Event not found.', 'error')
+    cur.close()
+    return redirect(url_for('admin_events'))
+
+
+@app.route('/admin/venues', methods=['GET', 'POST'])
+def admin_venues():
+    admin_required()
+    if request.method == 'POST':
+        name      = request.form.get('venue_name', '').strip()
+        address   = request.form.get('address', '').strip()
+        capacity  = int(request.form.get('capacity', 0))
+        suitable  = request.form.get('suitable_for', '').strip()
+
+        cur = mysql.connection.cursor()
+        cur.execute(
+            "INSERT INTO VENUE (venue_name, address, capacity, suitable_for) VALUES (%s,%s,%s,%s)",
+            (name, address, capacity, suitable)
+        )
+        mysql.connection.commit()
+        cur.close()
+        flash(f'Venue "{name}" added successfully!', 'success')
+        return redirect(url_for('admin_venues'))
+
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM VENUE ORDER BY venue_name")
+    venues = cur.fetchall()
+    cur.close()
+    return render_template('admin/venues.html', venues=venues)
+
+
+@app.route('/admin/bookings')
+def admin_bookings():
+    admin_required()
+    status_filter = request.args.get('status', '')
+    cur = mysql.connection.cursor()
+    if status_filter:
+        cur.execute("""
+            SELECT b.*, e.event_name, e.start_date, v.venue_name,
+                   u.first_name, u.last_name, u.email
+            FROM BOOKING b
+            JOIN EVENT e ON b.event_id = e.event_id
+            JOIN VENUE v ON e.venue_id = v.venue_id
+            JOIN USER u ON b.user_id = u.user_id
+            WHERE b.booking_status=%s
+            ORDER BY b.created_at DESC
+        """, (status_filter,))
+    else:
+        cur.execute("""
+            SELECT b.*, e.event_name, e.start_date, v.venue_name,
+                   u.first_name, u.last_name, u.email
+            FROM BOOKING b
+            JOIN EVENT e ON b.event_id = e.event_id
+            JOIN VENUE v ON e.venue_id = v.venue_id
+            JOIN USER u ON b.user_id = u.user_id
+            ORDER BY b.created_at DESC
+        """)
+    bookings = cur.fetchall()
+    cur.close()
+    return render_template('admin/bookings.html', bookings=bookings, status_filter=status_filter)
+
+
+@app.route('/admin/reports')
+def admin_reports():
+    admin_required()
+    cur = mysql.connection.cursor()
+
+    # Revenue per event
+    cur.execute("""
+        SELECT e.event_name, e.start_date, v.venue_name,
+               COUNT(b.booking_id) AS booking_count,
+               COALESCE(SUM(b.number_of_tickets), 0) AS tickets_sold,
+               COALESCE(SUM(b.final_amount), 0) AS revenue
+        FROM EVENT e
+        JOIN VENUE v ON e.venue_id = v.venue_id
+        LEFT JOIN BOOKING b ON e.event_id = b.event_id AND b.booking_status='confirmed'
+        GROUP BY e.event_id
+        ORDER BY revenue DESC
+    """)
+    revenue_report = cur.fetchall()
+
+    # Tickets remaining per upcoming event
+    cur.execute("""
+        SELECT e.event_name, e.start_date, v.venue_name, v.capacity,
+               (v.capacity - COALESCE(
+                   SUM(CASE WHEN b.booking_status='confirmed'
+                            THEN b.number_of_tickets ELSE 0 END), 0)
+               ) AS tickets_remaining
+        FROM EVENT e
+        JOIN VENUE v ON e.venue_id = v.venue_id
+        LEFT JOIN BOOKING b ON e.event_id = b.event_id
+        WHERE e.start_date >= CURDATE()
+        GROUP BY e.event_id
+        ORDER BY e.start_date ASC
+    """)
+    availability_report = cur.fetchall()
+
+    # Waiting list summary
+    cur.execute("""
+        SELECT e.event_name, COUNT(w.waiting_id) AS waiting_count
+        FROM WAITING_LIST w
+        JOIN EVENT e ON w.event_id = e.event_id
+        WHERE w.status='waiting'
+        GROUP BY e.event_id
+        ORDER BY waiting_count DESC
+    """)
+    waiting_report = cur.fetchall()
+
+    cur.close()
+    return render_template('admin/reports.html',
+                           revenue_report=revenue_report,
+                           availability_report=availability_report,
+                           waiting_report=waiting_report)
+
+
+# ──────────────────────────────────────────
 # Entry Point
 # ──────────────────────────────────────────
 

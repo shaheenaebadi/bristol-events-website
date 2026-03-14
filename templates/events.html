@@ -22,6 +22,9 @@
                 <li><a href="{{ url_for('contact') }}">Contact</a></li>
                 {% if session.user_id %}
                     <li><a href="{{ url_for('my_bookings') }}">My Bookings</a></li>
+                    {% if session.user_type == 'admin' %}
+                        <li><a href="{{ url_for('admin_dashboard') }}">Admin Panel</a></li>
+                    {% endif %}
                     <li><a href="{{ url_for('logout') }}">Logout</a></li>
                 {% else %}
                     <li><a href="{{ url_for('login') }}">Login/Register</a></li>
