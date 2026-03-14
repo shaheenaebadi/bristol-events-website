@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Bookings - Admin - Bristol Events</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .admin-table { width: 100%; border-collapse: collapse; background: white; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-md); }
+        .admin-table th { background: var(--primary-purple); color: white; padding: 0.9rem 1rem; text-align: left; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .admin-table td { padding: 0.8rem 1rem; border-bottom: 1px solid #f0e6ff; font-size: 0.85rem; vertical-align: middle; }
+        .admin-table tr:last-child td { border-bottom: none; }
+        .admin-table tr:hover td { background: #faf5ff; }
+        .badge { display: inline-block; padding: 0.2rem 0.7rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-confirmed { background: #d4edda; color: #155724; }
+        .badge-cancelled { background: #f8d7da; color: #721c24; }
+        .badge-pending   { background: #fff3cd; color: #856404; }
+        .filter-bar { display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🎪</span>
+                <h1>Bristol Events</h1>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('admin_dashboard') }}">Admin Panel</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+        </div>
+    </nav>
+
+    <div style="background: var(--primary-purple); padding: 0.75rem 0;">
+        <div class="container" style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+            <a href="{{ url_for('admin_dashboard') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Dashboard</a>
+            <a href="{{ url_for('admin_events') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Events</a>
+            <a href="{{ url_for('admin_venues') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Venues</a>
+            <a href="{{ url_for('admin_bookings') }}" style="color: white; font-weight: 700; text-decoration: none;">Bookings</a>
+            <a href="{{ url_for('admin_reports') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Reports</a>
+        </div>
+    </div>
+
+    <section class="events-showcase" style="padding-top: 2rem;">
+        <div class="container">
+            <h1 class="section-title">All Bookings ({{ bookings|length }})</h1>
+
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <span style="font-weight: 600; color: var(--primary-purple);">Filter by status:</span>
+                <a href="{{ url_for('admin_bookings') }}"
+                   class="btn {% if not status_filter %}btn-primary{% else %}btn-secondary{% endif %}"
+                   style="padding: 0.35rem 1rem; font-size: 0.85rem;">All</a>
+                <a href="{{ url_for('admin_bookings', status='confirmed') }}"
+                   class="btn {% if status_filter=='confirmed' %}btn-primary{% else %}btn-secondary{% endif %}"
+                   style="padding: 0.35rem 1rem; font-size: 0.85rem;">Confirmed</a>
+                <a href="{{ url_for('admin_bookings', status='cancelled') }}"
+                   class="btn {% if status_filter=='cancelled' %}btn-primary{% else %}btn-secondary{% endif %}"
+                   style="padding: 0.35rem 1rem; font-size: 0.85rem;">Cancelled</a>
+                <a href="{{ url_for('admin_bookings', status='pending') }}"
+                   class="btn {% if status_filter=='pending' %}btn-primary{% else %}btn-secondary{% endif %}"
+                   style="padding: 0.35rem 1rem; font-size: 0.85rem;">Pending</a>
+            </div>
+
+            {% if bookings %}
+            <div style="overflow-x: auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>#ID</th>
+                            <th>Customer</th>
+                            <th>Event</th>
+                            <th>Event Date</th>
+                            <th>Booked On</th>
+                            <th>Tickets</th>
+                            <th>Discount %</th>
+                            <th>Amount £</th>
+                            <th>Status</th>
+                            <th>Cancel Fee</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in bookings %}
+                        <tr>
+                            <td style="color: var(--text-gray);">#{{ b.booking_id }}</td>
+                            <td>
+                                <strong>{{ b.first_name }} {{ b.last_name }}</strong><br>
+                                <small style="color: var(--text-gray);">{{ b.email }}</small>
+                            </td>
+                            <td>
+                                <strong>{{ b.event_name }}</strong><br>
+                                <small style="color: var(--text-gray);">{{ b.venue_name }}</small>
+                            </td>
+                            <td>{{ b.start_date.strftime('%d %b %Y') }}</td>
+                            <td>{{ b.booking_date.strftime('%d %b %Y') if b.booking_date else '—' }}</td>
+                            <td style="text-align: center; font-weight: 600;">{{ b.number_of_tickets }}</td>
+                            <td style="text-align: center;">
+                                {% if b.discount_percentage > 0 %}
+                                    <span style="color: #00b894; font-weight: 600;">{{ b.discount_percentage }}%</span>
+                                    {% if b.student_discount_applied %}
+                                        <small style="color: #0984e3;"> + student</small>
+                                    {% endif %}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td style="font-weight: 700; color: var(--primary-purple);">£{{ "%.2f"|format(b.final_amount) }}</td>
+                            <td>
+                                {% if b.booking_status == 'confirmed' %}
+                                    <span class="badge badge-confirmed">Confirmed</span>
+                                {% elif b.booking_status == 'cancelled' %}
+                                    <span class="badge badge-cancelled">Cancelled</span>
+                                {% else %}
+                                    <span class="badge badge-pending">{{ b.booking_status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if b.cancellation_fee and b.cancellation_fee > 0 %}
+                                    <span style="color: #d63031; font-weight: 600;">£{{ "%.2f"|format(b.cancellation_fee) }}</span>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <div style="text-align: center; padding: 3rem; background: white; border-radius: 20px; box-shadow: var(--shadow-md);">
+                    <p style="color: var(--text-gray); font-size: 1.1rem;">No bookings found.</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom"><p>&copy; 2026 Bristol Community Events — Admin Panel</p></div>
+        </div>
+    </footer>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

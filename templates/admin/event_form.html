@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ action }} Event - Admin - Bristol Events</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .form-card { background: white; padding: 2rem; border-radius: 20px; box-shadow: var(--shadow-md); max-width: 750px; margin: 0 auto; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; font-weight: 600; color: var(--primary-purple); margin-bottom: 0.4rem; font-size: 0.9rem; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 0.7rem 1rem; border: 2px solid #e8d5ff; border-radius: 12px;
+            font-family: 'Poppins', sans-serif; font-size: 0.9rem; color: #333; box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: var(--primary-purple);
+        }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        .checkbox-group { display: flex; align-items: center; gap: 0.5rem; }
+        .checkbox-group input[type=checkbox] { width: auto; }
+        #multiday-fields { display: none; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🎪</span>
+                <h1>Bristol Events</h1>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('admin_dashboard') }}">Admin Panel</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+        </div>
+    </nav>
+
+    <div style="background: var(--primary-purple); padding: 0.75rem 0;">
+        <div class="container" style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+            <a href="{{ url_for('admin_dashboard') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Dashboard</a>
+            <a href="{{ url_for('admin_events') }}" style="color: white; font-weight: 700; text-decoration: none;">Events</a>
+            <a href="{{ url_for('admin_venues') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Venues</a>
+            <a href="{{ url_for('admin_bookings') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Bookings</a>
+            <a href="{{ url_for('admin_reports') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Reports</a>
+        </div>
+    </div>
+
+    <section class="events-showcase" style="padding-top: 2rem;">
+        <div class="container">
+            <h1 class="section-title">{{ action }} Event</h1>
+
+            <div class="form-card">
+                <form method="POST">
+                    <!-- Event Name -->
+                    <div class="form-group">
+                        <label for="event_name">Event Name *</label>
+                        <input type="text" id="event_name" name="event_name" required
+                               value="{{ event.event_name if event else '' }}">
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group">
+                        <label for="event_description">Description *</label>
+                        <textarea id="event_description" name="event_description" required>{{ event.event_description if event else '' }}</textarea>
+                    </div>
+
+                    <!-- Dates -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="start_date">Start Date *</label>
+                            <input type="date" id="start_date" name="start_date" required
+                                   value="{{ event.start_date.strftime('%Y-%m-%d') if event and event.start_date else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="end_date">End Date (multi-day only)</label>
+                            <input type="date" id="end_date" name="end_date"
+                                   value="{{ event.end_date.strftime('%Y-%m-%d') if event and event.end_date else '' }}">
+                        </div>
+                    </div>
+
+                    <!-- Price and last booking date -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ticket_price">Ticket Price (£) *</label>
+                            <input type="number" id="ticket_price" name="ticket_price"
+                                   min="0" step="0.01" required
+                                   value="{{ event.ticket_price if event else '0' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="last_booking_date">Last Booking Date</label>
+                            <input type="date" id="last_booking_date" name="last_booking_date"
+                                   value="{{ event.last_booking_date.strftime('%Y-%m-%d') if event and event.last_booking_date else '' }}">
+                        </div>
+                    </div>
+
+                    <!-- Multi-day checkbox -->
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="is_multi_day" name="is_multi_day"
+                                   {% if event and event.is_multi_day %}checked{% endif %}
+                                   onchange="toggleMultiday(this.checked)">
+                            <label for="is_multi_day" style="margin: 0; font-weight: 400; color: #333;">This is a multi-day event</label>
+                        </div>
+                        <div id="multiday-fields">
+                            <div class="form-row" style="margin-top: 0.75rem;">
+                                <div class="form-group">
+                                    <label for="days_count">Number of Days</label>
+                                    <input type="number" id="days_count" name="days_count" min="2"
+                                           value="{{ event.days_count if event else '2' }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="price_per_day">Price Per Day (£)</label>
+                                    <input type="number" id="price_per_day" name="price_per_day"
+                                           min="0" step="0.01"
+                                           value="{{ event.price_per_day if event else '0' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Venue and Category -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="venue_id">Venue *</label>
+                            <select id="venue_id" name="venue_id" required>
+                                <option value="">-- Select Venue --</option>
+                                {% for venue in venues %}
+                                    <option value="{{ venue.venue_id }}"
+                                        {% if event and event.venue_id == venue.venue_id %}selected{% endif %}>
+                                        {{ venue.venue_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="category_id">Category *</label>
+                            <select id="category_id" name="category_id" required>
+                                <option value="">-- Select Category --</option>
+                                {% for cat in categories %}
+                                    <option value="{{ cat.category_id }}"
+                                        {% if event and event.category_id == cat.category_id %}selected{% endif %}>
+                                        {{ cat.category_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Conditions -->
+                    <div class="form-group">
+                        <label for="conditions">Conditions / Notes</label>
+                        <input type="text" id="conditions" name="conditions"
+                               placeholder="e.g. Age 18+, bring ID"
+                               value="{{ event.conditions if event and event.conditions else '' }}">
+                    </div>
+
+                    <!-- Buttons -->
+                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
+                        <button type="submit" class="btn btn-primary">{{ action }} Event</button>
+                        <a href="{{ url_for('admin_events') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom"><p>&copy; 2026 Bristol Community Events — Admin Panel</p></div>
+        </div>
+    </footer>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        function toggleMultiday(show) {
+            document.getElementById('multiday-fields').style.display = show ? 'block' : 'none';
+        }
+        // Show multi-day fields on load if checkbox is checked
+        document.addEventListener('DOMContentLoaded', function() {
+            const cb = document.getElementById('is_multi_day');
+            if (cb.checked) toggleMultiday(true);
+        });
+    </script>
+</body>
+</html>
