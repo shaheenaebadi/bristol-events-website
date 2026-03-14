@@ -260,4 +260,12 @@
         // Form validation
         document.getElementById('bookingForm').addEventListener('submit', function(e) {
             const numTickets = parseInt(document.getElementById('num_tickets').value);
-            const maxTickets = {{ ticket
+            const maxTickets = {{ tickets_remaining }};
+            if (numTickets > maxTickets) {
+                e.preventDefault();
+                alert('Only ' + maxTickets + ' ticket(s) available. Please select fewer.');
+            }
+        });
+    </script>
+</body>
+</html>

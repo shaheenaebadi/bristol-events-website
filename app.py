@@ -18,6 +18,7 @@ app.config['MYSQL_DB'] = 'bristol_events'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
+app.jinja_env.globals['min'] = min
 
 
 # ──────────────────────────────────────────
