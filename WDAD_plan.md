@@ -100,6 +100,29 @@ The app currently has a working Flask skeleton (routes, Jinja2 templates, CSS, J
 
 ---
 
+## ✅ Session Log — 16 March 2026 — Review 2 Requirements
+
+### Review 2 criteria fulfilled in `ERD_AND_NORMALIZATION.md`:
+
+**Criterion 1 — ERD complete, 3NF, correct relationships & multiplicities (4 pts): DONE**
+- Added a full Mermaid `erDiagram` block at the top of Section 1
+- All 8 entities shown with every attribute, PK/FK labelled
+- All 8 relationships drawn with correct crow's foot multiplicities (||--o{, ||--o|)
+- Fixed BOOKING entity: removed `total_amount` (it was eliminated during 3NF and was not in the SQL — caused a mismatch)
+
+**Criterion 2 — Two examples per normalisation stage (3 pts): DONE**
+- 1NF: now has 2 examples (EVENT multi-valued columns + USER non-atomic `full_name`/`contacts` field)
+- 2NF: now has 2 examples (BOOKING partial dependencies + TICKET storing redundant event data)
+- 3NF: already had 2 examples ✓ (EVENT venue transitive dependency + BOOKING calculated fields)
+
+**Criterion 3 — ERD fully implemented in MySQL, mapped to ERD (3 pts): DONE**
+- Added ERD-to-SQL mapping table (Section 4) confirming all 8 entities match `CREATE TABLE` statements in `bristol_events.sql`
+- All PKs, FKs, ENUMs, and constraints cross-referenced
+
+**To view the ERD diagram:** Open `ERD_AND_NORMALIZATION.md` in VS Code with the Mermaid Preview extension, or paste the diagram block at [mermaid.live](https://mermaid.live)
+
+---
+
 ## Remaining Work — Final Submission (due 23 April 2026)
 
 > Phases 1–4 are complete. The app is fully functional. Below is everything left to do, broken into individual tasks you can tick off.
