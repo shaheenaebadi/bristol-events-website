@@ -88,7 +88,31 @@
                 {% for event in events %}
                 <div class="event-card">
                     <div class="event-image-container">
-                        <div class="event-image" style="background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%); height: 250px;"></div>
+                        {% if event.category_name == 'Exhibition' %}
+                            <img src="{{ url_for('static', filename='images/exhibition.jpg') }}"
+                                 alt="{{ event.event_name }}" class="event-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';">
+                        {% elif event.category_name == 'Musical' %}
+                            <img src="{{ url_for('static', filename='images/music.jpg') }}"
+                                 alt="{{ event.event_name }}" class="event-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #30cfd0 0%, #330867 100%)';">
+                        {% elif event.category_name == 'Sports' %}
+                            <img src="{{ url_for('static', filename='images/sports.jpg') }}"
+                                 alt="{{ event.event_name }}" class="event-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';">
+                        {% elif event.category_name == 'Theatre' %}
+                            <img src="{{ url_for('static', filename='images/theatre.jpg') }}"
+                                 alt="{{ event.event_name }}" class="event-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #fa709a 0%, #fee140 100%)';">
+                        {% elif event.category_name == 'Workshop' %}
+                            <img src="{{ url_for('static', filename='images/workshop.jpg') }}"
+                                 alt="{{ event.event_name }}" class="event-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)';">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/community.jpg') }}"
+                                 alt="{{ event.event_name }}" class="event-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)';">
+                        {% endif %}
                         {% if event.ticket_price == 0 %}
                             <span class="event-badge">FREE</span>
                         {% endif %}
