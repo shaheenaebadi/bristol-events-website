@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Receipt #{{ booking.booking_id }} - Bristol Events</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        @media print {
+            .navbar, .no-print, footer { display: none !important; }
+            .receipt-card { box-shadow: none !important; border: 2px solid #ccc; }
+            body { background: white !important; }
+        }
+        .receipt-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow-md);
+            max-width: 700px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        .receipt-header {
+            background: linear-gradient(135deg, var(--primary-pink), var(--primary-purple));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        .receipt-body { padding: 2rem; }
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.7rem 0;
+            border-bottom: 1px solid #f0e6ff;
+            font-size: 0.95rem;
+        }
+        .receipt-row:last-child { border-bottom: none; }
+        .receipt-row .label { color: var(--text-gray); }
+        .receipt-row .value { font-weight: 600; color: var(--text-dark); text-align: right; }
+        .ticket-pill {
+            display: inline-block;
+            background: var(--light-pink);
+            color: var(--primary-purple);
+            border: 1px solid #e8d5ff;
+            border-radius: 20px;
+            padding: 0.3rem 0.9rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 0.2rem;
+            font-family: monospace;
+        }
+        .total-row {
+            background: var(--light-pink);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar no-print">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🎪</span>
+                <h1>Bristol Events</h1>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('events') }}">Browse Events</a></li>
+                <li><a href="{{ url_for('my_bookings') }}" class="active">My Bookings</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+        </div>
+    </nav>
+
+    <section class="events-showcase" style="padding-top: 2rem; padding-bottom: 3rem;">
+        <div class="container">
+
+            <div class="receipt-card">
+                <!-- Receipt Header -->
+                <div class="receipt-header">
+                    <div style="font-size: 3rem; margin-bottom: 0.5rem;">🎟️</div>
+                    <h1 style="margin: 0; font-size: 1.6rem;">Booking Confirmation</h1>
+                    <p style="margin: 0.5rem 0 0; opacity: 0.9; font-size: 0.95rem;">
+                        Booking Reference: <strong>BCE-{{ "%05d"|format(booking.booking_id) }}</strong>
+                    </p>
+                </div>
+
+                <div class="receipt-body">
+                    <!-- Event Details -->
+                    <h3 style="color: var(--primary-purple); margin-bottom: 1rem; border-bottom: 2px solid var(--light-pink); padding-bottom: 0.5rem;">
+                        Event Details
+                    </h3>
+                    <div class="receipt-row">
+                        <span class="label">Event</span>
+                        <span class="value">{{ booking.event_name }}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="label">Date</span>
+                        <span class="value">{{ booking.start_date.strftime('%A, %d %B %Y') }}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="label">Venue</span>
+                        <span class="value">{{ booking.venue_name }}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="label">Address</span>
+                        <span class="value">{{ booking.address }}</span>
+                    </div>
+
+                    <!-- Price Breakdown -->
+                    <h3 style="color: var(--primary-purple); margin: 1.5rem 0 1rem; border-bottom: 2px solid var(--light-pink); padding-bottom: 0.5rem;">
+                        Price Breakdown
+                    </h3>
+                    <div class="receipt-row">
+                        <span class="label">Price per Ticket</span>
+                        <span class="value">£{{ "%.2f"|format(booking.ticket_price) }}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="label">Number of Tickets</span>
+                        <span class="value">{{ booking.number_of_tickets }}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="label">Subtotal</span>
+                        <span class="value">£{{ "%.2f"|format(base_price) }}</span>
+                    </div>
+                    {% if booking.discount_percentage > 0 %}
+                    <div class="receipt-row" style="color: #00b894;">
+                        <span class="label" style="color: #00b894;">
+                            Discount Applied ({{ booking.discount_percentage }}%)
+                            {% if booking.student_discount_applied %} — incl. student{% endif %}
+                        </span>
+                        <span class="value" style="color: #00b894;">-£{{ "%.2f"|format(discount_amount) }}</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="total-row">
+                        <span style="font-size: 1.1rem; font-weight: 700; color: var(--primary-purple);">Total Paid</span>
+                        <span style="font-size: 1.4rem; font-weight: 800; color: var(--primary-purple);">
+                            £{{ "%.2f"|format(booking.final_amount) }}
+                        </span>
+                    </div>
+
+                    <!-- Booking Status -->
+                    <div class="receipt-row" style="margin-top: 1rem;">
+                        <span class="label">Booking Status</span>
+                        <span class="value">
+                            {% if booking.booking_status == 'confirmed' %}
+                                <span style="color: #00b894;">✅ Confirmed</span>
+                            {% elif booking.booking_status == 'cancelled' %}
+                                <span style="color: #d63031;">❌ Cancelled</span>
+                            {% else %}
+                                {{ booking.booking_status|capitalize }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="label">Booking Date</span>
+                        <span class="value">{{ booking.booking_date.strftime('%d %B %Y') if booking.booking_date else '—' }}</span>
+                    </div>
+
+                    <!-- Ticket Numbers -->
+                    {% if tickets %}
+                    <h3 style="color: var(--primary-purple); margin: 1.5rem 0 1rem; border-bottom: 2px solid var(--light-pink); padding-bottom: 0.5rem;">
+                        Your Tickets
+                    </h3>
+                    <div style="padding: 0.5rem 0;">
+                        {% for ticket in tickets %}
+                            <span class="ticket-pill">{{ ticket.ticket_number }}</span>
+                        {% endfor %}
+                    </div>
+                    <p style="font-size: 0.8rem; color: var(--text-gray); margin-top: 0.75rem;">
+                        Please bring these ticket numbers to the event. Tickets are non-transferable.
+                    </p>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;" class="no-print">
+                        <button onclick="window.print()" class="btn btn-primary" style="flex: 1; min-width: 150px;">
+                            🖨️ Print Receipt
+                        </button>
+                        <a href="{{ url_for('my_bookings') }}" class="btn btn-secondary"
+                           style="flex: 1; min-width: 150px; text-align: center; padding: 1.2rem;">
+                            ← My Bookings
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <footer class="footer no-print">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2026 Bristol Community Events. Made with 💕 in Bristol</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
