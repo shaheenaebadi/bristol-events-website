@@ -67,6 +67,7 @@
             <h2 style="color: var(--primary-purple); margin-bottom: 1rem;">Add New Venue</h2>
             <div class="form-card">
                 <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="venue_name">Venue Name *</label>

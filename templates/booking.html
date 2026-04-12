@@ -90,6 +90,7 @@
 
                 <!-- Booking Form -->
                 <form method="POST" action="{{ url_for('book_event', event_id=event.event_id) }}" id="bookingForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="booking-form">
                         <h3 style="color: var(--primary-purple); margin-bottom: 1.5rem;">🎫 Select Number of Tickets</h3>
                         

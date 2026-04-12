@@ -1,16 +1,23 @@
 # =============================================
 # BRISTOL EVENTS - FLASK + MYSQL APPLICATION
-# Phases 1, 2 & 3: DB events, auth, bookings
 # =============================================
 
+import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_mysqldb import MySQL
+from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, date
 import MySQLdb.cursors
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'bristol-events-secret-key-2026'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'bristol-events-secret-key-2026')
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = ''
@@ -18,6 +25,7 @@ app.config['MYSQL_DB'] = 'bristol_events'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
+csrf = CSRFProtect(app)
 app.jinja_env.globals['min'] = min
 
 
@@ -193,7 +201,7 @@ def event_detail(event_id):
         params=(event_id, event['category_id']),
         limit=3
     )
-    return render_template('event_detail.html', event=event, similar_events=similar_events)
+    return render_template('event_detail.html', event=event, similar_events=similar_events, today=date.today())
 
 
 @app.route('/about')
@@ -213,15 +221,25 @@ def contact():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        first_name = request.form.get('first_name', '').strip()
-        last_name  = request.form.get('last_name', '').strip()
-        email      = request.form.get('email', '').strip().lower()
-        password   = request.form.get('password', '')
-        phone      = request.form.get('phone_number', '').strip()
-        is_student = 'is_student' in request.form
+        first_name       = request.form.get('first_name', '').strip()
+        last_name        = request.form.get('last_name', '').strip()
+        email            = request.form.get('email', '').strip().lower()
+        password         = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        phone            = request.form.get('phone_number', '').strip()
+        is_student       = 'is_student' in request.form
 
+        if '@' not in email or '.' not in email:
+            flash('Please enter a valid email address', 'error')
+            return render_template('register.html')
         if len(password) < 8:
             flash('Password must be at least 8 characters', 'error')
+            return render_template('register.html')
+        if password != confirm_password:
+            flash('Passwords do not match', 'error')
+            return render_template('register.html')
+        if phone and not phone.replace('+', '').replace(' ', '').replace('-', '').isdigit():
+            flash('Phone number must contain only digits', 'error')
             return render_template('register.html')
 
         cur = mysql.connection.cursor()
@@ -302,7 +320,13 @@ def book_event(event_id):
     total_discount    = min(advance_discount + student_discount, 100)
 
     if request.method == 'POST':
-        num_tickets = int(request.form.get('num_tickets', 1))
+        try:
+            num_tickets = int(request.form.get('num_tickets', 1))
+            if num_tickets < 1 or num_tickets > 10:
+                raise ValueError
+        except (ValueError, TypeError):
+            flash('Please select between 1 and 10 tickets.', 'error')
+            return redirect(url_for('book_event', event_id=event_id))
 
         # Booking deadline check
         if event['last_booking_date'] and today > event['last_booking_date']:
@@ -734,6 +758,146 @@ def admin_reports():
                            revenue_report=revenue_report,
                            availability_report=availability_report,
                            waiting_report=waiting_report)
+
+
+# ──────────────────────────────────────────
+# Routes — Waiting List
+# ──────────────────────────────────────────
+
+@app.route('/waiting-list')
+def waiting_list():
+    if 'user_id' not in session:
+        flash('Please login to view your waiting list', 'error')
+        return redirect(url_for('login'))
+
+    cur = mysql.connection.cursor()
+    cur.execute(
+        """SELECT wl.*, e.event_name, e.start_date, v.venue_name,
+                  (SELECT COUNT(*) FROM WAITING_LIST wl2
+                   WHERE wl2.event_id = wl.event_id
+                     AND wl2.status = 'waiting'
+                     AND wl2.joined_at <= wl.joined_at) AS position
+           FROM WAITING_LIST wl
+           JOIN EVENT e ON wl.event_id = e.event_id
+           JOIN VENUE v ON e.venue_id = v.venue_id
+           WHERE wl.user_id = %s
+           ORDER BY wl.joined_at DESC""",
+        (session['user_id'],)
+    )
+    entries = cur.fetchall()
+    cur.close()
+    return render_template('waiting_list.html', entries=entries)
+
+
+# ──────────────────────────────────────────
+# Routes — Profile
+# ──────────────────────────────────────────
+
+@app.route('/profile', methods=['GET', 'POST'])
+def profile():
+    if 'user_id' not in session:
+        flash('Please login to view your profile', 'error')
+        return redirect(url_for('login'))
+
+    cur = mysql.connection.cursor()
+
+    if request.method == 'POST':
+        action = request.form.get('action')
+
+        if action == 'update_details':
+            first_name = request.form.get('first_name', '').strip()
+            last_name  = request.form.get('last_name', '').strip()
+            phone      = request.form.get('phone_number', '').strip()
+            is_student = 'is_student' in request.form
+
+            if phone and not phone.replace('+', '').replace(' ', '').replace('-', '').isdigit():
+                flash('Phone number must contain only digits', 'error')
+            else:
+                cur.execute(
+                    """UPDATE USER SET first_name=%s, last_name=%s,
+                          phone_number=%s, is_student=%s
+                       WHERE user_id=%s""",
+                    (first_name, last_name, phone, is_student, session['user_id'])
+                )
+                mysql.connection.commit()
+                session['user_name'] = f"{first_name} {last_name}"
+                session['is_student'] = is_student
+                flash('Profile updated successfully!', 'success')
+
+        elif action == 'change_password':
+            old_password = request.form.get('old_password', '')
+            new_password = request.form.get('new_password', '')
+            confirm_new  = request.form.get('confirm_new_password', '')
+
+            cur.execute("SELECT password_hash FROM USER WHERE user_id=%s", (session['user_id'],))
+            user = cur.fetchone()
+
+            if not check_password_hash(user['password_hash'], old_password):
+                flash('Current password is incorrect', 'error')
+            elif len(new_password) < 8:
+                flash('New password must be at least 8 characters', 'error')
+            elif new_password != confirm_new:
+                flash('New passwords do not match', 'error')
+            else:
+                cur.execute(
+                    "UPDATE USER SET password_hash=%s WHERE user_id=%s",
+                    (generate_password_hash(new_password), session['user_id'])
+                )
+                mysql.connection.commit()
+                flash('Password changed successfully!', 'success')
+
+        cur.close()
+        return redirect(url_for('profile'))
+
+    cur.execute("SELECT * FROM USER WHERE user_id=%s", (session['user_id'],))
+    user = cur.fetchone()
+    cur.close()
+    return render_template('profile.html', user=user)
+
+
+# ──────────────────────────────────────────
+# Routes — Booking Receipt
+# ──────────────────────────────────────────
+
+@app.route('/booking-receipt/<int:booking_id>')
+def booking_receipt(booking_id):
+    if 'user_id' not in session:
+        flash('Please login to view your receipt', 'error')
+        return redirect(url_for('login'))
+
+    cur = mysql.connection.cursor()
+
+    cur.execute(
+        """SELECT b.*, e.event_name, e.start_date, e.ticket_price,
+                  v.venue_name, v.address
+           FROM BOOKING b
+           JOIN EVENT e ON b.event_id = e.event_id
+           JOIN VENUE v ON e.venue_id = v.venue_id
+           WHERE b.booking_id = %s AND b.user_id = %s""",
+        (booking_id, session['user_id'])
+    )
+    booking = cur.fetchone()
+
+    if not booking:
+        flash('Receipt not found.', 'error')
+        cur.close()
+        return redirect(url_for('my_bookings'))
+
+    cur.execute(
+        "SELECT * FROM TICKET WHERE booking_id=%s ORDER BY ticket_id",
+        (booking_id,)
+    )
+    tickets = cur.fetchall()
+    cur.close()
+
+    base_price = float(booking['ticket_price']) * int(booking['number_of_tickets'])
+    discount_amount = round(base_price * float(booking['discount_percentage']) / 100, 2)
+
+    return render_template('booking_receipt.html',
+                           booking=booking,
+                           tickets=tickets,
+                           base_price=base_price,
+                           discount_amount=discount_amount)
 
 
 # ──────────────────────────────────────────

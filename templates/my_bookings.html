@@ -5,8 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Bookings - Bristol Events</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
     <nav class="navbar">
         <div class="nav-container">
             <div class="logo">
@@ -16,7 +27,14 @@
             <ul class="nav-menu" id="navMenu">
                 <li><a href="{{ url_for('index') }}">Home</a></li>
                 <li><a href="{{ url_for('events') }}">Browse Events</a></li>
+                <li><a href="{{ url_for('about') }}">About Us</a></li>
+                <li><a href="{{ url_for('contact') }}">Contact</a></li>
                 <li><a href="{{ url_for('my_bookings') }}" class="active">My Bookings</a></li>
+                <li><a href="{{ url_for('waiting_list') }}">Waiting List</a></li>
+                <li><a href="{{ url_for('profile') }}">Profile</a></li>
+                {% if session.user_type == 'admin' %}
+                    <li><a href="{{ url_for('admin_dashboard') }}">Admin Panel</a></li>
+                {% endif %}
                 <li><a href="{{ url_for('logout') }}">Logout</a></li>
             </ul>
             <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
@@ -27,41 +45,64 @@
         <div class="container">
             <h1 class="section-title">🎟️ My Bookings</h1>
             <div style="max-width: 900px; margin: 0 auto;">
+
                 {% if bookings %}
                     {% for booking in bookings %}
-                    <div style="background: white; padding: 2rem; border-radius: 20px; box-shadow: var(--shadow-md); margin-bottom: 2rem;">
+                    <div style="background: white; padding: 2rem; border-radius: 20px;
+                                box-shadow: var(--shadow-md); margin-bottom: 2rem;
+                                border-left: 5px solid
+                                {% if booking.booking_status == 'confirmed' %}#00b894
+                                {% elif booking.booking_status == 'cancelled' %}#d63031
+                                {% else %}#fdcb6e{% endif %};">
+
                         <h3 style="color: var(--primary-purple); margin-bottom: 1rem;">{{ booking.event_name }}</h3>
                         <p>📅 Date: {{ booking.start_date.strftime('%d %B %Y') }}</p>
                         <p>📍 Venue: {{ booking.venue_name }}</p>
                         <p>🎫 Tickets: {{ booking.num_tickets }}</p>
-                        <p>💰 Total: £{{ "%.2f"|format(booking.final_amount) }}</p>
+                        <p>💰 Total Paid: £{{ "%.2f"|format(booking.final_amount) }}</p>
+                        {% if booking.discount_percentage > 0 %}
+                            <p style="color: #00b894; font-size: 0.9rem;">
+                                ✂️ Discount applied: {{ booking.discount_percentage }}%
+                            </p>
+                        {% endif %}
                         <p>
                             {% if booking.booking_status == 'confirmed' %}
                                 ✅ Status: <strong style="color:#00b894;">Confirmed</strong>
                             {% elif booking.booking_status == 'cancelled' %}
                                 ❌ Status: <strong style="color:#d63031;">Cancelled</strong>
-                                {% if booking.cancellation_fee > 0 %}
-                                    &nbsp;— Fee: £{{ "%.2f"|format(booking.cancellation_fee) }}
+                                {% if booking.cancellation_fee and booking.cancellation_fee > 0 %}
+                                    &nbsp;— Cancellation fee: £{{ "%.2f"|format(booking.cancellation_fee) }}
                                 {% endif %}
                             {% else %}
                                 ⏳ Status: {{ booking.booking_status }}
                             {% endif %}
                         </p>
-                        {% if booking.booking_status == 'confirmed' %}
-                        <form method="POST"
-                              action="{{ url_for('cancel_booking', booking_id=booking.booking_id) }}"
-                              onsubmit="return confirm('Are you sure you want to cancel this booking? Cancellation fees may apply.');">
-                            <button type="submit" class="btn btn-secondary"
-                                    style="margin-top:0.5rem; background:#ff6b6b; color:white;
-                                           border-color:#ff6b6b;">
-                                Cancel Booking
-                            </button>
-                        </form>
-                        {% endif %}
+
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.75rem;">
+                            {% if booking.booking_status == 'confirmed' %}
+                                <a href="{{ url_for('booking_receipt', booking_id=booking.booking_id) }}"
+                                   class="btn btn-secondary"
+                                   style="padding: 0.6rem 1.4rem; font-size: 0.9rem; text-align: center;">
+                                    🧾 View Receipt
+                                </a>
+                                <form method="POST"
+                                      action="{{ url_for('cancel_booking', booking_id=booking.booking_id) }}"
+                                      onsubmit="return confirm('Are you sure you want to cancel this booking? Cancellation fees may apply.');"
+                                      style="display: inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-secondary"
+                                            style="background:#ff6b6b; color:white; border-color:#ff6b6b;
+                                                   padding: 0.6rem 1.4rem; font-size: 0.9rem;">
+                                        Cancel Booking
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
                     </div>
                     {% endfor %}
                 {% else %}
                     <div style="text-align: center; padding: 3rem;">
+                        <p style="font-size: 3rem; margin-bottom: 1rem;">🎪</p>
                         <p style="font-size: 1.2rem; color: var(--text-gray);">
                             You haven't made any bookings yet!
                         </p>
@@ -70,6 +111,14 @@
                         </a>
                     </div>
                 {% endif %}
+
+                <!-- Waiting List Banner -->
+                <div style="text-align: center; margin-top: 1rem;">
+                    <a href="{{ url_for('waiting_list') }}"
+                       style="color: var(--primary-purple); text-decoration: none; font-size: 0.95rem;">
+                        ⏳ View your waiting list entries →
+                    </a>
+                </div>
             </div>
         </div>
     </section>
@@ -77,7 +126,7 @@
     <footer class="footer">
         <div class="container">
             <div class="footer-bottom">
-                <p>&copy; 2026 Bristol Community Events</p>
+                <p>&copy; 2026 Bristol Community Events. Made with 💕 in Bristol</p>
             </div>
         </div>
     </footer>
