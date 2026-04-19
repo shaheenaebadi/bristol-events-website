@@ -1,6 +1,6 @@
 /* =============================================
    BRISTOL EVENTS - JAVASCRIPT
-   Student ID: [Your Student ID]
+   Student ID: 2054539 | Name: Shaheena Ebadi
    Interactive Features & Animations
    ============================================= */
 

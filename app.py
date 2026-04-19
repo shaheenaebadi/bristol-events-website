@@ -1,5 +1,6 @@
 # =============================================
 # BRISTOL EVENTS - FLASK + MYSQL APPLICATION
+# Student ID: 2054539 | Name: Shaheena Ebadi
 # =============================================
 
 import os

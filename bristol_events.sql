@@ -1,6 +1,7 @@
 -- =====================================================
 -- BRISTOL EVENTS MANAGEMENT SYSTEM - SQL DATABASE
--- Student ID: [Your Student ID]
+-- Student ID: 2054539
+-- Name: Shaheena Ebadi
 -- Date: January 2026
 -- Database in 3rd Normal Form (3NF)
 -- =====================================================
