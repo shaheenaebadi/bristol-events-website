@@ -676,6 +676,24 @@ def admin_venues():
     return render_template('admin/venues.html', venues=venues)
 
 
+@app.route('/admin/users')
+def admin_users():
+    admin_required()
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT u.user_id, u.first_name, u.last_name, u.email,
+               u.phone_number, u.is_student, u.user_type, u.created_at,
+               COUNT(b.booking_id) AS booking_count
+        FROM USER u
+        LEFT JOIN BOOKING b ON u.user_id = b.user_id AND b.booking_status = 'confirmed'
+        GROUP BY u.user_id
+        ORDER BY u.created_at DESC
+    """)
+    users = cur.fetchall()
+    cur.close()
+    return render_template('admin/users.html', users=users)
+
+
 @app.route('/admin/bookings')
 def admin_bookings():
     admin_required()
