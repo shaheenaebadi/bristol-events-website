@@ -1,0 +1,61 @@
+
+BRISTOL EVENTS WEBSITE - INSTRUCTIONS
+Student ID: 2054539 | Name: Shaheena Ebadi
+
+REQUIREMENTS
+- Python 3.10 or higher
+- MySQL Server (e.g. via XAMPP or MySQL Workbench)
+- A terminal / command prompt
+
+
+STEP 1 - INSTALL DEPENDENCIES
+Open a terminal in the project folder and run:
+
+    pip install -r requirements.txt
+
+
+
+STEP 2 - SET UP THE DATABASE
+1. Make sure MySQL is running (start XAMPP or MySQL service)
+2. Open MySQL Workbench (or phpMyAdmin at http://localhost/phpmyadmin)
+3. Run the file: bristol_events.sql
+   - In MySQL Workbench: File > Open SQL Script > select bristol_events.sql > click the lightning bolt to run
+   - Or via terminal: mysql -u root bristol_events < bristol_events.sql
+
+This will create the 'bristol_events' database and insert all sample data.
+
+
+STEP 3 - RUN THE WEBSITE
+In the terminal, from the project folder run:
+
+    python app.py
+
+Then open your browser and go to:
+
+    http://localhost:5000
+
+IMPORTANT: Use 'python app.py' NOT 'flask run'
+(the app sets up passwords on startup via python app.py)
+
+
+LOGIN CREDENTIALS
+ADMIN ACCOUNT:
+  Email:    admin@bristolevents.com
+  Password: Admin123!
+  Access:   Admin dashboard at http://localhost:5000/admin
+            View all bookings at http://localhost:5000/admin/bookings
+            View reports at http://localhost:5000/admin/reports
+
+STANDARD USER (non-student):
+  Email:    john.smith@email.com
+  Password: Password1!
+
+STANDARD USER (student - gets 10% student discount):
+  Email:    emma.j@email.com
+  Password: Password1!
+
+
+NOTES
+- All other standard users also use password: Password1!
+
+

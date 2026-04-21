@@ -1,0 +1,98 @@
+<!-- Student ID: 2054539 | Name: Shaheena Ebadi -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Bristol Events</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🎪</span>
+                <h1>Bristol Events</h1>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('events') }}">Browse Events</a></li>
+                <li><a href="{{ url_for('admin_dashboard') }}" class="active">Admin Panel</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+        </div>
+    </nav>
+
+    <!-- Admin Sub-nav -->
+    <div style="background: var(--primary-purple); padding: 0.75rem 0;">
+        <div class="container" style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+            <a href="{{ url_for('admin_dashboard') }}" style="color: white; font-weight: 700; text-decoration: none;">Dashboard</a>
+            <a href="{{ url_for('admin_events') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Events</a>
+            <a href="{{ url_for('admin_venues') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Venues</a>
+            <a href="{{ url_for('admin_bookings') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Bookings</a>
+            <a href="{{ url_for('admin_users') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Users</a>
+            <a href="{{ url_for('admin_reports') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Reports</a>
+        </div>
+    </div>
+
+    <section class="events-showcase" style="padding-top: 2rem;">
+        <div class="container">
+            <h1 class="section-title">Admin Dashboard</h1>
+
+            <!-- Stat Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+                <div style="background: white; padding: 2rem; border-radius: 20px; box-shadow: var(--shadow-md); text-align: center; border-top: 4px solid var(--primary-purple);">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎪</div>
+                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary-purple);">{{ total_events }}</div>
+                    <div style="color: var(--text-gray); font-size: 0.9rem; margin-top: 0.25rem;">Upcoming Events</div>
+                </div>
+                <div style="background: white; padding: 2rem; border-radius: 20px; box-shadow: var(--shadow-md); text-align: center; border-top: 4px solid #00b894;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎟️</div>
+                    <div style="font-size: 2.5rem; font-weight: 800; color: #00b894;">{{ total_bookings }}</div>
+                    <div style="color: var(--text-gray); font-size: 0.9rem; margin-top: 0.25rem;">Confirmed Bookings</div>
+                </div>
+                <div style="background: white; padding: 2rem; border-radius: 20px; box-shadow: var(--shadow-md); text-align: center; border-top: 4px solid #fdcb6e;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💰</div>
+                    <div style="font-size: 2.5rem; font-weight: 800; color: #e17055;">£{{ "%.2f"|format(total_revenue) }}</div>
+                    <div style="color: var(--text-gray); font-size: 0.9rem; margin-top: 0.25rem;">Total Revenue</div>
+                </div>
+                <div style="background: white; padding: 2rem; border-radius: 20px; box-shadow: var(--shadow-md); text-align: center; border-top: 4px solid #74b9ff;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">👥</div>
+                    <div style="font-size: 2.5rem; font-weight: 800; color: #0984e3;">{{ total_users }}</div>
+                    <div style="color: var(--text-gray); font-size: 0.9rem; margin-top: 0.25rem;">Registered Users</div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <h2 style="color: var(--primary-purple); margin-bottom: 1.5rem;">Quick Actions</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <a href="{{ url_for('admin_add_event') }}" class="btn btn-primary" style="text-align: center; text-decoration: none;">+ Add New Event</a>
+                <a href="{{ url_for('admin_venues') }}" class="btn btn-secondary" style="text-align: center; text-decoration: none;">Manage Venues</a>
+                <a href="{{ url_for('admin_bookings') }}" class="btn btn-secondary" style="text-align: center; text-decoration: none;">View All Bookings</a>
+                <a href="{{ url_for('admin_reports') }}" class="btn btn-secondary" style="text-align: center; text-decoration: none;">View Reports</a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2026 Bristol Community Events — Admin Panel</p>
+            </div>
+        </div>
+    </footer>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

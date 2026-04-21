@@ -1,8 +1,8 @@
-<!-- =============================================
+-----------------------------------------------------
      BRISTOL EVENTS - BOOKING PAGE
-     Student ID: [Your Student ID]
+     Student ID: 2054539 | Name: Shaheena Ebadi
      Complete Booking System with Discount Calculation
-     ============================================= -->
+     ----------------------------------------------------------
 
 <!DOCTYPE html>
 <html lang="en">
@@ -90,6 +90,7 @@
 
                 <!-- Booking Form -->
                 <form method="POST" action="{{ url_for('book_event', event_id=event.event_id) }}" id="bookingForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="booking-form">
                         <h3 style="color: var(--primary-purple); margin-bottom: 1.5rem;">🎫 Select Number of Tickets</h3>
                         
@@ -260,4 +261,12 @@
         // Form validation
         document.getElementById('bookingForm').addEventListener('submit', function(e) {
             const numTickets = parseInt(document.getElementById('num_tickets').value);
-            const maxTickets = {{ ticket
+            const maxTickets = {{ tickets_remaining }};
+            if (numTickets > maxTickets) {
+                e.preventDefault();
+                alert('Only ' + maxTickets + ' ticket(s) available. Please select fewer.');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,3 +1,4 @@
+<!-- Student ID: 2054539 | Name: Shaheena Ebadi -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,6 +23,11 @@
                 <li><a href="{{ url_for('contact') }}">Contact</a></li>
                 {% if session.user_id %}
                     <li><a href="{{ url_for('my_bookings') }}">My Bookings</a></li>
+                    <li><a href="{{ url_for('waiting_list') }}">Waiting List</a></li>
+                    <li><a href="{{ url_for('profile') }}">Profile</a></li>
+                    {% if session.user_type == 'admin' %}
+                        <li><a href="{{ url_for('admin_dashboard') }}">Admin Panel</a></li>
+                    {% endif %}
                     <li><a href="{{ url_for('logout') }}">Logout</a></li>
                 {% else %}
                     <li><a href="{{ url_for('login') }}">Login/Register</a></li>
@@ -39,12 +45,77 @@
     <section class="events-showcase" style="padding-top: 2rem;">
         <div class="container">
             <h2 class="section-title">🎉 All Events</h2>
-            
+
+            <!-- Filter Form -->
+            <form method="GET" action="{{ url_for('events') }}"
+                  style="background: white; padding: 1.5rem; border-radius: 16px;
+                         box-shadow: var(--shadow-md); margin-bottom: 2rem;
+                         display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+                <div style="flex: 1; min-width: 160px;">
+                    <label style="display:block; font-size:0.9rem; font-weight:600;
+                                  color:var(--primary-purple); margin-bottom:0.4rem;">
+                        Category
+                    </label>
+                    <select name="category"
+                            style="width:100%; padding:0.6rem 1rem; border:2px solid var(--light-pink);
+                                   border-radius:8px; font-family:inherit; font-size:0.95rem;">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.category_id }}"
+                                {% if selected_category == cat.category_id|string %}selected{% endif %}>
+                                {{ cat.category_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem; padding-bottom:0.2rem;">
+                    <input type="checkbox" name="free_only" id="free_only" value="1"
+                           {% if free_only %}checked{% endif %}
+                           style="width:18px; height:18px; accent-color:var(--primary-purple);">
+                    <label for="free_only" style="font-weight:600; color:var(--primary-purple);">
+                        Free events only
+                    </label>
+                </div>
+                <div style="display:flex; gap:0.5rem;">
+                    <button type="submit" class="btn btn-primary" style="padding:0.7rem 1.5rem;">
+                        Filter
+                    </button>
+                    <a href="{{ url_for('events') }}" class="btn btn-secondary"
+                       style="padding:0.7rem 1.5rem; text-align:center;">
+                        Clear
+                    </a>
+                </div>
+            </form>
+
             <div class="events-grid">
                 {% for event in events %}
                 <div class="event-card">
                     <div class="event-image-container">
-                        <div class="event-image" style="background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%); height: 250px;"></div>
+                        {% if event.category_name == 'Exhibition' %}
+                            <img src="{{ url_for('static', filename='images/exhibition.jpg') }}"
+                                 alt="{{ event.event_name }}" class="event-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';">
+                        {% elif event.category_name == 'Musical' %}
+                            <img src="{{ url_for('static', filename='images/music.jpg') }}"
+                                 alt="{{ event.event_name }}" class="event-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #30cfd0 0%, #330867 100%)';">
+                        {% elif event.category_name == 'Sports' %}
+                            <img src="{{ url_for('static', filename='images/sports.jpg') }}"
+                                 alt="{{ event.event_name }}" class="event-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';">
+                        {% elif event.category_name == 'Theatre' %}
+                            <img src="{{ url_for('static', filename='images/theatre.jpg') }}"
+                                 alt="{{ event.event_name }}" class="event-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #fa709a 0%, #fee140 100%)';">
+                        {% elif event.category_name == 'Workshop' %}
+                            <img src="{{ url_for('static', filename='images/workshop.jpg') }}"
+                                 alt="{{ event.event_name }}" class="event-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)';">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/community.jpg') }}"
+                                 alt="{{ event.event_name }}" class="event-image"
+                                 onerror="this.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)';">
+                        {% endif %}
                         {% if event.ticket_price == 0 %}
                             <span class="event-badge">FREE</span>
                         {% endif %}

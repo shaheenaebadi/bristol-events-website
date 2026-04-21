@@ -1,6 +1,7 @@
 -- =====================================================
 -- BRISTOL EVENTS MANAGEMENT SYSTEM - SQL DATABASE
--- Student ID: [Your Student ID]
+-- Student ID: 2054539
+-- Name: Shaheena Ebadi
 -- Date: January 2026
 -- Database in 3rd Normal Form (3NF)
 -- =====================================================
@@ -10,9 +11,8 @@ DROP DATABASE IF EXISTS bristol_events;
 CREATE DATABASE bristol_events;
 USE bristol_events;
 
--- =====================================================
 -- TABLE CREATION
--- =====================================================
+
 
 -- Table: USER
 CREATE TABLE USER (
@@ -68,7 +68,7 @@ CREATE TABLE EVENT (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (venue_id) REFERENCES VENUE(venue_id) ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (category_id) REFERENCES EVENT_CATEGORY(category_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    CHECK (end_date >= start_date),
+    CHECK (end_date >= start_date), --Constraint to prevent invalid date ranges being inserted
     CHECK (ticket_price >= 0),
     CHECK (days_count > 0),
     INDEX idx_start_date (start_date),
@@ -90,7 +90,7 @@ CREATE TABLE BOOKING (
     cancellation_fee DECIMAL(10, 2) DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE RESTRICT ON UPDATE CASCADE,--You can't delete a USER or EVENT that has bookings — prevents accidental data loss"
     FOREIGN KEY (event_id) REFERENCES EVENT(event_id) ON DELETE RESTRICT ON UPDATE CASCADE,
     CHECK (number_of_tickets > 0),
     CHECK (discount_percentage >= 0 AND discount_percentage <= 100),
@@ -105,10 +105,10 @@ CREATE TABLE BOOKING (
 CREATE TABLE TICKET (
     ticket_id INT PRIMARY KEY AUTO_INCREMENT,
     booking_id INT NOT NULL,
-    ticket_number VARCHAR(50) UNIQUE NOT NULL,
+    ticket_number VARCHAR(50) UNIQUE NOT NULL,--You can't delete a USER or EVENT that has bookings — prevents accidental data loss"
     is_used BOOLEAN DEFAULT FALSE,
     check_in_time TIMESTAMP NULL,
-    FOREIGN KEY (booking_id) REFERENCES BOOKING(booking_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (booking_id) REFERENCES BOOKING(booking_id) ON DELETE CASCADE ON UPDATE CASCADE,--Constraint to prevent invalid date ranges being inserted
     INDEX idx_booking (booking_id),
     INDEX idx_ticket_number (ticket_number)
 );
@@ -144,9 +144,8 @@ CREATE TABLE PAYMENT (
     INDEX idx_payment_status (payment_status)
 );
 
--- =====================================================
+
 -- SAMPLE DATA INSERTION
--- =====================================================
 
 -- Insert Event Categories
 INSERT INTO EVENT_CATEGORY (category_name, description) VALUES
@@ -184,27 +183,27 @@ INSERT INTO USER (first_name, last_name, email, password_hash, phone_number, is_
 
 -- Insert Events
 INSERT INTO EVENT (event_name, event_description, start_date, end_date, ticket_price, is_multi_day, days_count, price_per_day, last_booking_date, conditions, venue_id, category_id) VALUES
-('Bristol Balloon Fiesta', 'A spectacular week of hot air balloons, rides, and family entertainment', '2026-02-15', '2026-02-22', 70.00, TRUE, 7, 10.00, '2026-02-10', 'Suitable for all ages', 1, 7),
-('Contemporary Art Exhibition', 'Explore modern art from local and international artists', '2026-02-20', '2026-02-20', 0.00, FALSE, 1, 0.00, '2026-02-18', 'Free entry with booking', 2, 1),
-('Bristol City FC vs Leeds United', 'Exciting Championship football match', '2026-02-25', '2026-02-25', 50.00, FALSE, 1, 50.00, '2026-02-23', 'Stadium seating', 1, 3),
-('Shakespeare''s Hamlet', 'Classic theatrical performance by Bristol Old Vic Company', '2026-02-28', '2026-02-28', 35.00, FALSE, 1, 35.00, '2026-02-26', 'Formal attire recommended', 4, 5),
-('Bristol Jazz Festival', 'Three days of world-class jazz performances', '2026-03-05', '2026-03-07', 45.00, TRUE, 3, 15.00, '2026-03-03', 'All ages welcome', 3, 4),
-('Digital Photography Workshop', 'Learn professional photography techniques', '2026-03-10', '2026-03-10', 25.00, FALSE, 1, 25.00, '2026-03-08', 'Bring your own camera', 7, 2),
-('Spring Art Fair', 'Annual exhibition of local artists'' work', '2026-03-15', '2026-03-17', 0.00, TRUE, 3, 0.00, '2026-03-13', 'Free admission', 6, 1),
-('Bristol Marathon', 'Annual city marathon event', '2026-04-05', '2026-04-05', 30.00, FALSE, 1, 30.00, '2026-03-30', 'Participants only', 1, 3),
-('Classical Music Concert', 'Symphony orchestra performance', '2026-04-10', '2026-04-10', 40.00, FALSE, 1, 40.00, '2026-04-08', 'Smart casual dress code', 3, 4),
-('Pottery Making Workshop', 'Hands-on pottery and ceramics workshop', '2026-04-15', '2026-04-15', 30.00, FALSE, 1, 30.00, '2026-04-13', 'All materials provided', 8, 2);
+('Bristol Balloon Fiesta', 'A spectacular week of hot air balloons, rides, and family entertainment', '2026-05-03', '2026-05-10', 70.00, TRUE, 7, 10.00, '2026-04-28', 'Suitable for all ages', 1, 7),
+('Contemporary Art Exhibition', 'Explore modern art from local and international artists', '2026-05-08', '2026-05-08', 0.00, FALSE, 1, 0.00, '2026-05-06', 'Free entry with booking', 2, 1),
+('Bristol City FC vs Leeds United', 'Exciting Championship football match', '2026-05-12', '2026-05-12', 50.00, FALSE, 1, 50.00, '2026-05-10', 'Stadium seating', 1, 3),
+('Shakespeare''s Hamlet', 'Classic theatrical performance by Bristol Old Vic Company', '2026-05-16', '2026-05-16', 35.00, FALSE, 1, 35.00, '2026-05-14', 'Formal attire recommended', 4, 5),
+('Bristol Jazz Festival', 'Three days of world-class jazz performances', '2026-05-21', '2026-05-23', 45.00, TRUE, 3, 15.00, '2026-05-19', 'All ages welcome', 3, 4),
+('Digital Photography Workshop', 'Learn professional photography techniques', '2026-05-28', '2026-05-28', 25.00, FALSE, 1, 25.00, '2026-05-26', 'Bring your own camera', 7, 2),
+('Spring Art Fair', 'Annual exhibition of local artists'' work', '2026-06-04', '2026-06-06', 0.00, TRUE, 3, 0.00, '2026-06-02', 'Free admission', 6, 1),
+('Bristol Marathon', 'Annual city marathon event', '2026-06-11', '2026-06-11', 30.00, FALSE, 1, 30.00, '2026-06-06', 'Participants only', 1, 3),
+('Classical Music Concert', 'Symphony orchestra performance', '2026-06-18', '2026-06-18', 40.00, FALSE, 1, 40.00, '2026-06-16', 'Smart casual dress code', 3, 4),
+('Pottery Making Workshop', 'Hands-on pottery and ceramics workshop', '2026-06-25', '2026-06-25', 30.00, FALSE, 1, 30.00, '2026-06-23', 'All materials provided', 8, 2);
 
 -- Insert Bookings
 INSERT INTO BOOKING (user_id, event_id, booking_date, number_of_tickets, discount_percentage, student_discount_applied, final_amount, booking_status) VALUES
-(2, 1, '2025-12-20', 2, 20.00, FALSE, 112.00, 'confirmed'), -- Booked 57 days in advance (20% discount)
-(3, 2, '2026-02-01', 1, 10.00, TRUE, 0.00, 'confirmed'), -- Student, free event
-(4, 3, '2026-01-25', 3, 15.00, FALSE, 127.50, 'confirmed'), -- Booked 31 days in advance (15% discount)
-(5, 4, '2026-02-10', 2, 10.00, TRUE, 63.00, 'confirmed'), -- Student discount (10%) + early bird (10%)
-(6, 5, '2026-02-20', 1, 5.00, FALSE, 42.75, 'pending'), -- Booked 13 days in advance (5% discount)
-(7, 6, '2026-02-28', 1, 10.00, TRUE, 22.50, 'confirmed'), -- Student discount
-(2, 7, '2026-03-01', 4, 0.00, FALSE, 0.00, 'confirmed'), -- Free event
-(3, 8, '2026-03-15', 1, 10.00, TRUE, 27.00, 'pending'); -- Student discount
+(2, 1, '2026-03-07', 2, 20.00, FALSE, 112.00, 'confirmed'), -- Booked 57 days in advance (20% discount)
+(3, 2, '2026-04-18', 1, 10.00, TRUE, 0.00, 'confirmed'), -- Student, free event
+(4, 3, '2026-04-11', 3, 15.00, FALSE, 127.50, 'confirmed'), -- Booked 31 days in advance (15% discount)
+(5, 4, '2026-04-06', 2, 10.00, TRUE, 63.00, 'confirmed'), -- Student discount (10%) + early bird (10%)
+(6, 5, '2026-05-08', 1, 5.00, FALSE, 42.75, 'pending'), -- Booked 13 days in advance (5% discount)
+(7, 6, '2026-05-13', 1, 10.00, TRUE, 22.50, 'confirmed'), -- Student discount
+(2, 7, '2026-04-18', 4, 0.00, FALSE, 0.00, 'confirmed'), -- Free event
+(3, 8, '2026-05-15', 1, 10.00, TRUE, 27.00, 'pending'); -- Student discount
 
 -- Insert Tickets
 INSERT INTO TICKET (booking_id, ticket_number, is_used) VALUES
@@ -232,18 +231,17 @@ INSERT INTO WAITING_LIST (user_id, event_id, status) VALUES
 
 -- Insert Payments
 INSERT INTO PAYMENT (booking_id, payment_method, payment_amount, payment_status, transaction_id) VALUES
-(1, 'Credit Card', 112.00, 'completed', 'TXN-2025-12-20-001'),
-(2, 'Credit Card', 0.00, 'completed', 'TXN-2026-02-01-002'),
-(3, 'PayPal', 127.50, 'completed', 'TXN-2026-01-25-003'),
-(4, 'Credit Card', 63.00, 'completed', 'TXN-2026-02-10-004'),
-(5, 'Debit Card', 42.75, 'pending', 'TXN-2026-02-20-005'),
-(6, 'Credit Card', 22.50, 'completed', 'TXN-2026-02-28-006'),
-(7, 'Credit Card', 0.00, 'completed', 'TXN-2026-03-01-007'),
-(8, 'PayPal', 27.00, 'pending', 'TXN-2026-03-15-008');
+(1, 'Credit Card', 112.00, 'completed', 'TXN-2026-03-07-001'),
+(2, 'Credit Card', 0.00, 'completed', 'TXN-2026-04-18-002'),
+(3, 'PayPal', 127.50, 'completed', 'TXN-2026-04-11-003'),
+(4, 'Credit Card', 63.00, 'completed', 'TXN-2026-04-06-004'),
+(5, 'Debit Card', 42.75, 'pending', 'TXN-2026-05-08-005'),
+(6, 'Credit Card', 22.50, 'completed', 'TXN-2026-05-13-006'),
+(7, 'Credit Card', 0.00, 'completed', 'TXN-2026-04-18-007'),
+(8, 'PayPal', 27.00, 'pending', 'TXN-2026-05-15-008');
 
--- =====================================================
+
 -- USEFUL QUERIES FOR VERIFICATION
--- =====================================================
 
 -- View all events with venue and category information
 SELECT 
@@ -335,9 +333,9 @@ WHERE u.is_student = TRUE AND b.booking_status = 'confirmed'
 GROUP BY u.user_id
 ORDER BY total_spent DESC;
 
--- =====================================================
+
 -- DATABASE INTEGRITY VERIFICATION
--- =====================================================
+
 
 -- Check for referential integrity
 SELECT 
@@ -355,6 +353,4 @@ LEFT JOIN USER u ON b.user_id = u.user_id
 LEFT JOIN EVENT e ON b.event_id = e.event_id
 WHERE u.user_id IS NULL OR e.event_id IS NULL;
 
--- =====================================================
--- END OF SQL SCRIPT
--- =====================================================
+

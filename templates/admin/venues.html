@@ -1,0 +1,133 @@
+<!-- Student ID: 2054539 | Name: Shaheena Ebadi -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Venues - Admin - Bristol Events</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .admin-table { width: 100%; border-collapse: collapse; background: white; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-md); }
+        .admin-table th { background: var(--primary-purple); color: white; padding: 0.9rem 1rem; text-align: left; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .admin-table td { padding: 0.85rem 1rem; border-bottom: 1px solid #f0e6ff; font-size: 0.9rem; vertical-align: middle; }
+        .admin-table tr:last-child td { border-bottom: none; }
+        .admin-table tr:hover td { background: #faf5ff; }
+        .form-card { background: white; padding: 2rem; border-radius: 20px; box-shadow: var(--shadow-md); margin-bottom: 2rem; }
+        .form-group { margin-bottom: 1.1rem; }
+        .form-group label { display: block; font-weight: 600; color: var(--primary-purple); margin-bottom: 0.35rem; font-size: 0.9rem; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 0.65rem 1rem; border: 2px solid #e8d5ff; border-radius: 12px;
+            font-family: 'Poppins', sans-serif; font-size: 0.9rem; box-sizing: border-box;
+        }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--primary-purple); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    </style>
+</head>
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🎪</span>
+                <h1>Bristol Events</h1>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('admin_dashboard') }}">Admin Panel</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+        </div>
+    </nav>
+
+    <div style="background: var(--primary-purple); padding: 0.75rem 0;">
+        <div class="container" style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+            <a href="{{ url_for('admin_dashboard') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Dashboard</a>
+            <a href="{{ url_for('admin_events') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Events</a>
+            <a href="{{ url_for('admin_venues') }}" style="color: white; font-weight: 700; text-decoration: none;">Venues</a>
+            <a href="{{ url_for('admin_bookings') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Bookings</a>
+            <a href="{{ url_for('admin_users') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Users</a>
+            <a href="{{ url_for('admin_reports') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Reports</a>
+        </div>
+    </div>
+
+    <section class="events-showcase" style="padding-top: 2rem;">
+        <div class="container">
+            <h1 class="section-title">Manage Venues</h1>
+
+            <!-- Add Venue Form -->
+            <h2 style="color: var(--primary-purple); margin-bottom: 1rem;">Add New Venue</h2>
+            <div class="form-card">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="venue_name">Venue Name *</label>
+                            <input type="text" id="venue_name" name="venue_name" required placeholder="e.g. Colston Hall">
+                        </div>
+                        <div class="form-group">
+                            <label for="capacity">Capacity *</label>
+                            <input type="number" id="capacity" name="capacity" min="1" required placeholder="e.g. 500">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Address *</label>
+                        <input type="text" id="address" name="address" required placeholder="e.g. Colston Street, Bristol, BS1 5AR">
+                    </div>
+                    <div class="form-group">
+                        <label for="suitable_for">Suitable For</label>
+                        <input type="text" id="suitable_for" name="suitable_for" placeholder="e.g. Music, Theatre, Conferences">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem;">Add Venue</button>
+                </form>
+            </div>
+
+            <!-- Venues Table -->
+            <h2 style="color: var(--primary-purple); margin-bottom: 1rem;">All Venues ({{ venues|length }})</h2>
+            {% if venues %}
+            <div style="overflow-x: auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Venue Name</th>
+                            <th>Address</th>
+                            <th>Capacity</th>
+                            <th>Suitable For</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for venue in venues %}
+                        <tr>
+                            <td><strong>{{ venue.venue_name }}</strong></td>
+                            <td>{{ venue.address }}</td>
+                            <td style="font-weight: 600;">{{ venue.capacity }}</td>
+                            <td>{{ venue.suitable_for or '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <p style="color: var(--text-gray);">No venues found.</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom"><p>&copy; 2026 Bristol Community Events — Admin Panel</p></div>
+        </div>
+    </footer>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

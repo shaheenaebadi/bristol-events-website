@@ -1,0 +1,145 @@
+<!-- Student ID: 2054539 | Name: Shaheena Ebadi -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Events - Admin - Bristol Events</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .admin-table { width: 100%; border-collapse: collapse; background: white; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-md); }
+        .admin-table th { background: var(--primary-purple); color: white; padding: 0.9rem 1rem; text-align: left; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .admin-table td { padding: 0.85rem 1rem; border-bottom: 1px solid #f0e6ff; font-size: 0.9rem; vertical-align: middle; }
+        .admin-table tr:last-child td { border-bottom: none; }
+        .admin-table tr:hover td { background: #faf5ff; }
+        .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-future { background: #d4edda; color: #155724; }
+        .badge-past { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🎪</span>
+                <h1>Bristol Events</h1>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('events') }}">Browse Events</a></li>
+                <li><a href="{{ url_for('admin_dashboard') }}">Admin Panel</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+        </div>
+    </nav>
+
+    <div style="background: var(--primary-purple); padding: 0.75rem 0;">
+        <div class="container" style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+            <a href="{{ url_for('admin_dashboard') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Dashboard</a>
+            <a href="{{ url_for('admin_events') }}" style="color: white; font-weight: 700; text-decoration: none;">Events</a>
+            <a href="{{ url_for('admin_venues') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Venues</a>
+            <a href="{{ url_for('admin_bookings') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Bookings</a>
+            <a href="{{ url_for('admin_users') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Users</a>
+            <a href="{{ url_for('admin_reports') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Reports</a>
+        </div>
+    </div>
+
+    <section class="events-showcase" style="padding-top: 2rem;">
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                <h1 class="section-title" style="margin: 0;">Manage Events</h1>
+                <a href="{{ url_for('admin_add_event') }}" class="btn btn-primary">+ Add New Event</a>
+            </div>
+
+            {% if events %}
+            <div style="overflow-x: auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Event Name</th>
+                            <th>Date</th>
+                            <th>Venue</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Tickets Left</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in events %}
+                        <tr>
+                            <td><strong>{{ event.event_name }}</strong></td>
+                            <td>
+                                {{ event.start_date.strftime('%d %b %Y') }}
+                                {% if event.start_date >= today %}
+                                    <span class="badge badge-future">Upcoming</span>
+                                {% else %}
+                                    <span class="badge badge-past">Past</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ event.venue_name }}</td>
+                            <td>{{ event.category_name }}</td>
+                            <td>
+                                {% if event.ticket_price == 0 %}
+                                    <span style="color: #00b894; font-weight: 600;">FREE</span>
+                                {% else %}
+                                    £{{ "%.2f"|format(event.ticket_price) }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span style="font-weight: 600; color: {% if event.tickets_remaining <= 5 %}#d63031{% elif event.tickets_remaining <= 20 %}#e17055{% else %}#00b894{% endif %};">
+                                    {{ event.tickets_remaining }}
+                                </span>
+                            </td>
+                            <td style="white-space: nowrap;">
+                                <a href="{{ url_for('admin_edit_event', event_id=event.event_id) }}"
+                                   class="btn btn-secondary"
+                                   style="padding: 0.3rem 0.8rem; font-size: 0.8rem; margin-right: 0.4rem;">
+                                    Edit
+                                </a>
+                                <form method="POST"
+                                      action="{{ url_for('admin_delete_event', event_id=event.event_id) }}"
+                                      style="display: inline;"
+                                      onsubmit="return confirm('Delete event \'{{ event.event_name }}\'? This cannot be undone.');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit"
+                                            style="padding: 0.3rem 0.8rem; font-size: 0.8rem; background: #ff6b6b; color: white; border: none; border-radius: 8px; cursor: pointer; font-family: inherit;">
+                                        Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <div style="text-align: center; padding: 3rem; background: white; border-radius: 20px; box-shadow: var(--shadow-md);">
+                    <p style="color: var(--text-gray); font-size: 1.1rem;">No events found.</p>
+                    <a href="{{ url_for('admin_add_event') }}" class="btn btn-primary" style="margin-top: 1rem;">Add First Event</a>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom"><p>&copy; 2026 Bristol Community Events — Admin Panel</p></div>
+        </div>
+    </footer>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>const today = new Date();</script>
+</body>
+</html>

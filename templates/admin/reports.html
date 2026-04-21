@@ -1,0 +1,196 @@
+<!-- Student ID: 2054539 | Name: Shaheena Ebadi -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Admin - Bristol Events</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .report-table { width: 100%; border-collapse: collapse; background: white; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-md); margin-bottom: 3rem; }
+        .report-table th { background: var(--primary-purple); color: white; padding: 0.9rem 1rem; text-align: left; font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .report-table td { padding: 0.85rem 1rem; border-bottom: 1px solid #f0e6ff; font-size: 0.88rem; vertical-align: middle; }
+        .report-table tr:last-child td { border-bottom: none; }
+        .report-table tr:hover td { background: #faf5ff; }
+        .report-section h2 { color: var(--primary-purple); margin-bottom: 1rem; font-size: 1.3rem; }
+        .availability-bar { height: 8px; border-radius: 4px; background: #f0e6ff; overflow: hidden; margin-top: 4px; min-width: 80px; }
+        .availability-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+    </style>
+</head>
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🎪</span>
+                <h1>Bristol Events</h1>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('admin_dashboard') }}">Admin Panel</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+        </div>
+    </nav>
+
+    <div style="background: var(--primary-purple); padding: 0.75rem 0;">
+        <div class="container" style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+            <a href="{{ url_for('admin_dashboard') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Dashboard</a>
+            <a href="{{ url_for('admin_events') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Events</a>
+            <a href="{{ url_for('admin_venues') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Venues</a>
+            <a href="{{ url_for('admin_bookings') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Bookings</a>
+            <a href="{{ url_for('admin_users') }}" style="color: rgba(255,255,255,0.8); text-decoration: none;">Users</a>
+            <a href="{{ url_for('admin_reports') }}" style="color: white; font-weight: 700; text-decoration: none;">Reports</a>
+        </div>
+    </div>
+
+    <section class="events-showcase" style="padding-top: 2rem;">
+        <div class="container">
+            <h1 class="section-title">Reports</h1>
+
+            <!-- Report 1: Revenue Per Event -->
+            <div class="report-section">
+                <h2>Revenue & Bookings Per Event</h2>
+                {% if revenue_report %}
+                <div style="overflow-x: auto;">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Event Name</th>
+                                <th>Date</th>
+                                <th>Venue</th>
+                                <th>Bookings</th>
+                                <th>Tickets Sold</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set total_rev = namespace(val=0) %}
+                            {% for row in revenue_report %}
+                                {% set total_rev.val = total_rev.val + row.revenue %}
+                            <tr>
+                                <td><strong>{{ row.event_name }}</strong></td>
+                                <td>{{ row.start_date.strftime('%d %b %Y') }}</td>
+                                <td>{{ row.venue_name }}</td>
+                                <td style="text-align: center; font-weight: 600;">{{ row.booking_count }}</td>
+                                <td style="text-align: center; font-weight: 600;">{{ row.tickets_sold }}</td>
+                                <td style="font-weight: 700; color: {% if row.revenue > 0 %}#00b894{% else %}var(--text-gray){% endif %};">
+                                    £{{ "%.2f"|format(row.revenue) }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr style="background: #faf5ff;">
+                                <td colspan="5" style="font-weight: 700; color: var(--primary-purple);">Total Revenue</td>
+                                <td style="font-weight: 800; font-size: 1.05rem; color: var(--primary-purple);">£{{ "%.2f"|format(total_rev.val) }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                    <p style="color: var(--text-gray);">No data available.</p>
+                {% endif %}
+            </div>
+
+            <!-- Report 2: Ticket Availability -->
+            <div class="report-section">
+                <h2>Ticket Availability — Upcoming Events</h2>
+                {% if availability_report %}
+                <div style="overflow-x: auto;">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Event Name</th>
+                                <th>Date</th>
+                                <th>Venue</th>
+                                <th>Capacity</th>
+                                <th>Tickets Remaining</th>
+                                <th>Fill Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in availability_report %}
+                            {% set sold = row.capacity - row.tickets_remaining %}
+                            {% set fill_pct = (sold / row.capacity * 100)|round(1) if row.capacity > 0 else 0 %}
+                            <tr>
+                                <td><strong>{{ row.event_name }}</strong></td>
+                                <td>{{ row.start_date.strftime('%d %b %Y') }}</td>
+                                <td>{{ row.venue_name }}</td>
+                                <td style="text-align: center;">{{ row.capacity }}</td>
+                                <td style="text-align: center; font-weight: 700;
+                                    color: {% if row.tickets_remaining <= 10 %}#d63031{% elif row.tickets_remaining <= 30 %}#e17055{% else %}#00b894{% endif %};">
+                                    {{ row.tickets_remaining }}
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <div class="availability-bar" style="flex: 1;">
+                                            <div class="availability-fill"
+                                                 style="width: {{ fill_pct }}%;
+                                                        background: {% if fill_pct >= 90 %}#d63031{% elif fill_pct >= 70 %}#e17055{% else %}#00b894{% endif %};">
+                                            </div>
+                                        </div>
+                                        <span style="font-size: 0.8rem; color: var(--text-gray); min-width: 40px;">{{ fill_pct }}%</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <p style="color: var(--text-gray);">No upcoming events.</p>
+                {% endif %}
+            </div>
+
+            <!-- Report 3: Waiting List -->
+            <div class="report-section">
+                <h2>Waiting List Summary</h2>
+                {% if waiting_report %}
+                <div style="overflow-x: auto;">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Event Name</th>
+                                <th>People Waiting</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in waiting_report %}
+                            <tr>
+                                <td><strong>{{ row.event_name }}</strong></td>
+                                <td style="font-weight: 700; color: #e17055;">{{ row.waiting_count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <div style="background: white; padding: 1.5rem; border-radius: 16px; box-shadow: var(--shadow-md);">
+                        <p style="color: var(--text-gray); margin: 0;">No one is currently on any waiting list.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom"><p>&copy; 2026 Bristol Community Events — Admin Panel</p></div>
+        </div>
+    </footer>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
