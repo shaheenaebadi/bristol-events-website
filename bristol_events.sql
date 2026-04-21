@@ -11,9 +11,8 @@ DROP DATABASE IF EXISTS bristol_events;
 CREATE DATABASE bristol_events;
 USE bristol_events;
 
--- =====================================================
 -- TABLE CREATION
--- =====================================================
+
 
 -- Table: USER
 CREATE TABLE USER (
@@ -69,7 +68,7 @@ CREATE TABLE EVENT (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (venue_id) REFERENCES VENUE(venue_id) ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (category_id) REFERENCES EVENT_CATEGORY(category_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    CHECK (end_date >= start_date),
+    CHECK (end_date >= start_date), --Constraint to prevent invalid date ranges being inserted
     CHECK (ticket_price >= 0),
     CHECK (days_count > 0),
     INDEX idx_start_date (start_date),
@@ -91,7 +90,7 @@ CREATE TABLE BOOKING (
     cancellation_fee DECIMAL(10, 2) DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE RESTRICT ON UPDATE CASCADE,--You can't delete a USER or EVENT that has bookings — prevents accidental data loss"
     FOREIGN KEY (event_id) REFERENCES EVENT(event_id) ON DELETE RESTRICT ON UPDATE CASCADE,
     CHECK (number_of_tickets > 0),
     CHECK (discount_percentage >= 0 AND discount_percentage <= 100),
@@ -106,10 +105,10 @@ CREATE TABLE BOOKING (
 CREATE TABLE TICKET (
     ticket_id INT PRIMARY KEY AUTO_INCREMENT,
     booking_id INT NOT NULL,
-    ticket_number VARCHAR(50) UNIQUE NOT NULL,
+    ticket_number VARCHAR(50) UNIQUE NOT NULL,--You can't delete a USER or EVENT that has bookings — prevents accidental data loss"
     is_used BOOLEAN DEFAULT FALSE,
     check_in_time TIMESTAMP NULL,
-    FOREIGN KEY (booking_id) REFERENCES BOOKING(booking_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (booking_id) REFERENCES BOOKING(booking_id) ON DELETE CASCADE ON UPDATE CASCADE,--Constraint to prevent invalid date ranges being inserted
     INDEX idx_booking (booking_id),
     INDEX idx_ticket_number (ticket_number)
 );
@@ -145,9 +144,8 @@ CREATE TABLE PAYMENT (
     INDEX idx_payment_status (payment_status)
 );
 
--- =====================================================
+
 -- SAMPLE DATA INSERTION
--- =====================================================
 
 -- Insert Event Categories
 INSERT INTO EVENT_CATEGORY (category_name, description) VALUES
@@ -242,9 +240,8 @@ INSERT INTO PAYMENT (booking_id, payment_method, payment_amount, payment_status,
 (7, 'Credit Card', 0.00, 'completed', 'TXN-2026-04-18-007'),
 (8, 'PayPal', 27.00, 'pending', 'TXN-2026-05-15-008');
 
--- =====================================================
+
 -- USEFUL QUERIES FOR VERIFICATION
--- =====================================================
 
 -- View all events with venue and category information
 SELECT 
@@ -336,9 +333,9 @@ WHERE u.is_student = TRUE AND b.booking_status = 'confirmed'
 GROUP BY u.user_id
 ORDER BY total_spent DESC;
 
--- =====================================================
+
 -- DATABASE INTEGRITY VERIFICATION
--- =====================================================
+
 
 -- Check for referential integrity
 SELECT 
@@ -356,6 +353,4 @@ LEFT JOIN USER u ON b.user_id = u.user_id
 LEFT JOIN EVENT e ON b.event_id = e.event_id
 WHERE u.user_id IS NULL OR e.event_id IS NULL;
 
--- =====================================================
--- END OF SQL SCRIPT
--- =====================================================
+

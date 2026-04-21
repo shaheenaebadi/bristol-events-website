@@ -1,5 +1,5 @@
 # BRISTOL EVENTS MANAGEMENT SYSTEM - DATABASE DESIGN
-## Student ID: [Your Student ID]
+## Student ID: [25054539]
 ## Date: January 2026
 
 ---
@@ -446,7 +446,7 @@ BOOKING:
 ---
 
 ## 4. ERD-TO-SQL MAPPING
-
+--"This mapping table confirms that all 8 ERD entities are implemented in SQL, with all primary keys, foreign keys, and constraints accounted for.
 The table below confirms that every entity in the ERD has been implemented as a `CREATE TABLE` statement in `bristol_events.sql`, with all attributes and relationships present.
 
 | ERD Entity | SQL Table | Primary Key | Foreign Keys | Notes |

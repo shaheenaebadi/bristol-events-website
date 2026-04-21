@@ -30,9 +30,9 @@ csrf = CSRFProtect(app)
 app.jinja_env.globals['min'] = min
 
 
-# ──────────────────────────────────────────
+
 # Business Logic Helpers
-# ──────────────────────────────────────────
+
 
 def get_advance_discount(days_until_event):
     """Return advance-booking discount percentage based on days until event."""
@@ -82,9 +82,8 @@ def fix_seed_passwords():
         print(f"DB setup warning (MySQL may not be running): {e}")
 
 
-# ──────────────────────────────────────────
 # Shared DB Query
-# ──────────────────────────────────────────
+
 
 def query_events(extra_where='', params=(), limit=None):
     """
@@ -215,9 +214,9 @@ def contact():
     return render_template('contact.html')
 
 
-# ──────────────────────────────────────────
+
 # Routes — Authentication
-# ──────────────────────────────────────────
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -299,9 +298,9 @@ def logout():
     return redirect(url_for('index'))
 
 
-# ──────────────────────────────────────────
+
 # Routes — Booking System
-# ──────────────────────────────────────────
+
 
 @app.route('/book/<int:event_id>', methods=['GET', 'POST'])
 def book_event(event_id):
@@ -486,9 +485,9 @@ def cancel_booking(booking_id):
     return redirect(url_for('my_bookings'))
 
 
-# ──────────────────────────────────────────
+
 # Routes — Admin Panel
-# ──────────────────────────────────────────
+
 
 def admin_required():
     """Abort with 403 if current user is not admin."""
@@ -761,9 +760,9 @@ def admin_reports():
                            waiting_report=waiting_report)
 
 
-# ──────────────────────────────────────────
+
 # Routes — Waiting List
-# ──────────────────────────────────────────
+
 
 @app.route('/waiting-list')
 def waiting_list():
@@ -790,9 +789,9 @@ def waiting_list():
     return render_template('waiting_list.html', entries=entries)
 
 
-# ──────────────────────────────────────────
+
 # Routes — Profile
-# ──────────────────────────────────────────
+
 
 @app.route('/profile', methods=['GET', 'POST'])
 def profile():
@@ -856,9 +855,8 @@ def profile():
     return render_template('profile.html', user=user)
 
 
-# ──────────────────────────────────────────
+
 # Routes — Booking Receipt
-# ──────────────────────────────────────────
 
 @app.route('/booking-receipt/<int:booking_id>')
 def booking_receipt(booking_id):
@@ -901,9 +899,9 @@ def booking_receipt(booking_id):
                            discount_amount=discount_amount)
 
 
-# ──────────────────────────────────────────
+
 # Entry Point
-# ──────────────────────────────────────────
+
 
 if __name__ == '__main__':
     fix_seed_passwords()

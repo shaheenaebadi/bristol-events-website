@@ -1,4 +1,4 @@
-/* =============================================
+/*============================================
    BRISTOL EVENTS - JAVASCRIPT
    Student ID: [Your Student ID]
    Interactive Features & Animations
