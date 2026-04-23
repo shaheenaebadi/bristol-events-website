@@ -4,12 +4,11 @@
 # =============================================
 
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash, session
-from flask_mysqldb import MySQL
+from flask import Flask, render_template, request, redirect, url_for, flash, session, g
+import mysql.connector
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, date
-import MySQLdb.cursors
 
 try:
     from dotenv import load_dotenv
@@ -19,13 +18,20 @@ except ImportError:
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'bristol-events-secret-key-2026')
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = ''
-app.config['MYSQL_DB'] = 'bristol_events'
-app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
-mysql = MySQL(app)
+DB_CONFIG = dict(host='localhost', user='root', password='', database='bristol_events')
+
+def get_db():
+    if 'db' not in g:
+        g.db = mysql.connector.connect(**DB_CONFIG)
+    return g.db
+
+@app.teardown_appcontext
+def close_db(e=None):
+    db = g.pop('db', None)
+    if db is not None and db.is_connected():
+        db.close()
+
 csrf = CSRFProtect(app)
 app.jinja_env.globals['min'] = min
 
@@ -52,7 +58,6 @@ def get_cancellation_charge(days_until_event):
 
 def fix_seed_passwords():
     """Replace placeholder seed passwords with real werkzeug hashes (runs once)."""
-    import MySQLdb
     seed = {
         'admin@bristolevents.com': 'Admin123!',
         'john.smith@email.com':    'Password1!',
@@ -64,10 +69,8 @@ def fix_seed_passwords():
         'james.d@email.com':       'Password1!',
     }
     try:
-        conn = MySQLdb.connect(host='localhost', user='root', passwd='',
-                               db='bristol_events',
-                               cursorclass=MySQLdb.cursors.DictCursor)
-        cur = conn.cursor()
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cur = conn.cursor(dictionary=True)
         for email, pw in seed.items():
             cur.execute("SELECT password_hash FROM USER WHERE email=%s", (email,))
             row = cur.fetchone()
@@ -114,7 +117,7 @@ def query_events(extra_where='', params=(), limit=None):
         ORDER BY e.start_date ASC
         {limit_clause}
     """
-    cur = mysql.connection.cursor()
+    cur = get_db().cursor(dictionary=True)
     cur.execute(sql, params)
     rows = cur.fetchall()
     cur.close()
@@ -138,7 +141,7 @@ def get_event_by_id(event_id):
         WHERE e.event_id = %s
         GROUP BY e.event_id
     """
-    cur = mysql.connection.cursor()
+    cur = get_db().cursor(dictionary=True)
     cur.execute(sql, (event_id,))
     row = cur.fetchone()
     cur.close()
@@ -177,7 +180,7 @@ def events():
     extra_where = " AND ".join(extra_where_parts)
     events_list = query_events(extra_where=extra_where, params=tuple(params))
 
-    cur = mysql.connection.cursor()
+    cur = get_db().cursor(dictionary=True)
     cur.execute("SELECT * FROM EVENT_CATEGORY ORDER BY category_name")
     categories = cur.fetchall()
     cur.close()
@@ -242,7 +245,7 @@ def register():
             flash('Phone number must contain only digits', 'error')
             return render_template('register.html')
 
-        cur = mysql.connection.cursor()
+        cur = get_db().cursor(dictionary=True)
         cur.execute("SELECT user_id FROM USER WHERE email=%s", (email,))
         if cur.fetchone():
             flash('Email already registered', 'error')
@@ -256,7 +259,7 @@ def register():
             (first_name, last_name, email, generate_password_hash(password),
              phone, is_student)
         )
-        mysql.connection.commit()
+        get_db().commit()
         cur.close()
 
         flash('Registration successful! Please login.', 'success')
@@ -271,7 +274,7 @@ def login():
         email    = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
 
-        cur = mysql.connection.cursor()
+        cur = get_db().cursor(dictionary=True)
         cur.execute("SELECT * FROM USER WHERE email=%s", (email,))
         user = cur.fetchone()
         cur.close()
@@ -342,7 +345,7 @@ def book_event(event_id):
 
         # Event full → waiting list
         if tickets_remaining <= 0:
-            cur = mysql.connection.cursor()
+            cur = get_db().cursor(dictionary=True)
             cur.execute(
                 "SELECT waiting_id FROM WAITING_LIST WHERE user_id=%s AND event_id=%s AND status='waiting'",
                 (session['user_id'], event_id)
@@ -352,7 +355,7 @@ def book_event(event_id):
                     "INSERT INTO WAITING_LIST (user_id, event_id) VALUES (%s, %s)",
                     (session['user_id'], event_id)
                 )
-                mysql.connection.commit()
+                get_db().commit()
                 flash('This event is full. You have been added to the waiting list!', 'info')
             else:
                 flash('You are already on the waiting list for this event.', 'info')
@@ -369,7 +372,7 @@ def book_event(event_id):
         subtotal       = base_price * num_tickets
         final_amount   = round(subtotal * (1 - total_discount / 100), 2)
 
-        cur = mysql.connection.cursor()
+        cur = get_db().cursor(dictionary=True)
 
         # Insert booking
         cur.execute(
@@ -390,7 +393,7 @@ def book_event(event_id):
                 (booking_id, ticket_num)
             )
 
-        mysql.connection.commit()
+        get_db().commit()
         cur.close()
 
         flash(f'Booking confirmed! {num_tickets} ticket(s) booked for {event["event_name"]}.', 'success')
@@ -409,7 +412,7 @@ def my_bookings():
         flash('Please login to view your bookings', 'error')
         return redirect(url_for('login'))
 
-    cur = mysql.connection.cursor()
+    cur = get_db().cursor(dictionary=True)
     cur.execute(
         """SELECT b.*,
                   b.number_of_tickets AS num_tickets,
@@ -433,7 +436,7 @@ def cancel_booking(booking_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    cur = mysql.connection.cursor()
+    cur = get_db().cursor(dictionary=True)
     cur.execute(
         """SELECT b.*, e.start_date, e.event_name
            FROM BOOKING b
@@ -470,7 +473,7 @@ def cancel_booking(booking_id):
             (next_in_line['waiting_id'],)
         )
 
-    mysql.connection.commit()
+    get_db().commit()
     cur.close()
 
     if charge_pct == 0:
@@ -499,7 +502,7 @@ def admin_required():
 @app.route('/admin')
 def admin_dashboard():
     admin_required()
-    cur = mysql.connection.cursor()
+    cur = get_db().cursor(dictionary=True)
 
     cur.execute("SELECT COUNT(*) AS cnt FROM EVENT WHERE start_date >= CURDATE()")
     total_events = cur.fetchone()['cnt']
@@ -524,7 +527,7 @@ def admin_dashboard():
 @app.route('/admin/events')
 def admin_events():
     admin_required()
-    cur = mysql.connection.cursor()
+    cur = get_db().cursor(dictionary=True)
     cur.execute("""
         SELECT e.*, v.venue_name, ec.category_name,
                (v.capacity - COALESCE(
@@ -546,7 +549,7 @@ def admin_events():
 @app.route('/admin/events/add', methods=['GET', 'POST'])
 def admin_add_event():
     admin_required()
-    cur = mysql.connection.cursor()
+    cur = get_db().cursor(dictionary=True)
     cur.execute("SELECT * FROM VENUE ORDER BY venue_name")
     venues = cur.fetchall()
     cur.execute("SELECT * FROM EVENT_CATEGORY ORDER BY category_name")
@@ -567,7 +570,7 @@ def admin_add_event():
         venue_id    = int(request.form.get('venue_id'))
         category_id = int(request.form.get('category_id'))
 
-        cur = mysql.connection.cursor()
+        cur = get_db().cursor(dictionary=True)
         cur.execute("""
             INSERT INTO EVENT (event_name, event_description, start_date, end_date,
                                ticket_price, is_multi_day, days_count, price_per_day,
@@ -575,7 +578,7 @@ def admin_add_event():
             VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
         """, (name, description, start_date, end_date, price, is_multi,
               days_count, price_pd, last_date, conditions, venue_id, category_id))
-        mysql.connection.commit()
+        get_db().commit()
         cur.close()
         flash(f'Event "{name}" added successfully!', 'success')
         return redirect(url_for('admin_events'))
@@ -588,7 +591,7 @@ def admin_add_event():
 @app.route('/admin/events/edit/<int:event_id>', methods=['GET', 'POST'])
 def admin_edit_event(event_id):
     admin_required()
-    cur = mysql.connection.cursor()
+    cur = get_db().cursor(dictionary=True)
     cur.execute("SELECT * FROM VENUE ORDER BY venue_name")
     venues = cur.fetchall()
     cur.execute("SELECT * FROM EVENT_CATEGORY ORDER BY category_name")
@@ -615,7 +618,7 @@ def admin_edit_event(event_id):
         venue_id    = int(request.form.get('venue_id'))
         category_id = int(request.form.get('category_id'))
 
-        cur = mysql.connection.cursor()
+        cur = get_db().cursor(dictionary=True)
         cur.execute("""
             UPDATE EVENT SET event_name=%s, event_description=%s, start_date=%s,
                 end_date=%s, ticket_price=%s, is_multi_day=%s, days_count=%s,
@@ -624,7 +627,7 @@ def admin_edit_event(event_id):
             WHERE event_id=%s
         """, (name, description, start_date, end_date, price, is_multi,
               days_count, price_pd, last_date, conditions, venue_id, category_id, event_id))
-        mysql.connection.commit()
+        get_db().commit()
         cur.close()
         flash(f'Event "{name}" updated successfully!', 'success')
         return redirect(url_for('admin_events'))
@@ -637,12 +640,12 @@ def admin_edit_event(event_id):
 @app.route('/admin/events/delete/<int:event_id>', methods=['POST'])
 def admin_delete_event(event_id):
     admin_required()
-    cur = mysql.connection.cursor()
+    cur = get_db().cursor(dictionary=True)
     cur.execute("SELECT event_name FROM EVENT WHERE event_id=%s", (event_id,))
     event = cur.fetchone()
     if event:
         cur.execute("DELETE FROM EVENT WHERE event_id=%s", (event_id,))
-        mysql.connection.commit()
+        get_db().commit()
         flash(f'Event "{event["event_name"]}" deleted.', 'success')
     else:
         flash('Event not found.', 'error')
@@ -659,17 +662,17 @@ def admin_venues():
         capacity  = int(request.form.get('capacity', 0))
         suitable  = request.form.get('suitable_for', '').strip()
 
-        cur = mysql.connection.cursor()
+        cur = get_db().cursor(dictionary=True)
         cur.execute(
             "INSERT INTO VENUE (venue_name, address, capacity, suitable_for) VALUES (%s,%s,%s,%s)",
             (name, address, capacity, suitable)
         )
-        mysql.connection.commit()
+        get_db().commit()
         cur.close()
         flash(f'Venue "{name}" added successfully!', 'success')
         return redirect(url_for('admin_venues'))
 
-    cur = mysql.connection.cursor()
+    cur = get_db().cursor(dictionary=True)
     cur.execute("SELECT * FROM VENUE ORDER BY venue_name")
     venues = cur.fetchall()
     cur.close()
@@ -679,7 +682,7 @@ def admin_venues():
 @app.route('/admin/users')
 def admin_users():
     admin_required()
-    cur = mysql.connection.cursor()
+    cur = get_db().cursor(dictionary=True)
     cur.execute("""
         SELECT u.user_id, u.first_name, u.last_name, u.email,
                u.phone_number, u.is_student, u.user_type, u.created_at,
@@ -698,7 +701,7 @@ def admin_users():
 def admin_bookings():
     admin_required()
     status_filter = request.args.get('status', '')
-    cur = mysql.connection.cursor()
+    cur = get_db().cursor(dictionary=True)
     if status_filter:
         cur.execute("""
             SELECT b.*, e.event_name, e.start_date, v.venue_name,
@@ -728,7 +731,7 @@ def admin_bookings():
 @app.route('/admin/reports')
 def admin_reports():
     admin_required()
-    cur = mysql.connection.cursor()
+    cur = get_db().cursor(dictionary=True)
 
     # Revenue per event
     cur.execute("""
@@ -788,7 +791,7 @@ def waiting_list():
         flash('Please login to view your waiting list', 'error')
         return redirect(url_for('login'))
 
-    cur = mysql.connection.cursor()
+    cur = get_db().cursor(dictionary=True)
     cur.execute(
         """SELECT wl.*, e.event_name, e.start_date, v.venue_name,
                   (SELECT COUNT(*) FROM WAITING_LIST wl2
@@ -817,7 +820,7 @@ def profile():
         flash('Please login to view your profile', 'error')
         return redirect(url_for('login'))
 
-    cur = mysql.connection.cursor()
+    cur = get_db().cursor(dictionary=True)
 
     if request.method == 'POST':
         action = request.form.get('action')
@@ -837,7 +840,7 @@ def profile():
                        WHERE user_id=%s""",
                     (first_name, last_name, phone, is_student, session['user_id'])
                 )
-                mysql.connection.commit()
+                get_db().commit()
                 session['user_name'] = f"{first_name} {last_name}"
                 session['is_student'] = is_student
                 flash('Profile updated successfully!', 'success')
@@ -861,7 +864,7 @@ def profile():
                     "UPDATE USER SET password_hash=%s WHERE user_id=%s",
                     (generate_password_hash(new_password), session['user_id'])
                 )
-                mysql.connection.commit()
+                get_db().commit()
                 flash('Password changed successfully!', 'success')
 
         cur.close()
@@ -882,7 +885,7 @@ def booking_receipt(booking_id):
         flash('Please login to view your receipt', 'error')
         return redirect(url_for('login'))
 
-    cur = mysql.connection.cursor()
+    cur = get_db().cursor(dictionary=True)
 
     cur.execute(
         """SELECT b.*, e.event_name, e.start_date, e.ticket_price,
